@@ -1,0 +1,1647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Panacea InfoSec — AI Evidence Collector | Walkthrough & Demo Guide</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-base: #f8fafc;
+      --bg-surface: #ffffff;
+      --bg-surface-elevated: #f1f5f9;
+      --bg-surface-hover: #e2e8f0;
+      --border-subtle: #e2e8f0;
+      --border-strong: #cbd5e1;
+      --border-accent: rgba(5, 150, 105, 0.3);
+      --border-cyan: rgba(2, 132, 199, 0.3);
+      --text-main: #0f172a;
+      --text-muted: #475569;
+      --text-dim: #64748b;
+      --emerald-primary: #059669;
+      --emerald-light: #ecfdf5;
+      --emerald-border: #a7f3d0;
+      --cyan-primary: #0284c7;
+      --cyan-light: #f0f9ff;
+      --cyan-border: #bae6fd;
+      --violet-accent: #7c3aed;
+      --violet-light: #f5f3ff;
+      --violet-border: #ddd6fe;
+      --amber-accent: #d97706;
+      --amber-light: #fffbeb;
+      --amber-border: #fde68a;
+      --rose-accent: #e11d48;
+      --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      scroll-padding-top: 96px;
+    }
+
+    body {
+      background-color: var(--bg-base);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    ::selection {
+      background-color: var(--emerald-primary);
+      color: #ffffff;
+    }
+
+    /* Custom Sleek Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--bg-base);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: #cbd5e1 transparent;
+    }
+
+    /* Subtle Ambient Light Gradients */
+    .ambient-glow {
+      position: fixed;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 1200px;
+      height: 550px;
+      background: radial-gradient(circle at 50% 0%, rgba(5, 150, 105, 0.08) 0%, rgba(2, 132, 199, 0.05) 40%, rgba(248, 250, 252, 0) 75%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .ambient-glow-secondary {
+      position: fixed;
+      bottom: 0;
+      right: 0;
+      width: 800px;
+      height: 500px;
+      background: radial-gradient(circle at 80% 80%, rgba(124, 58, 237, 0.04) 0%, rgba(248, 250, 252, 0) 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Header & Navigation */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      background: rgba(255, 255, 255, 0.9);
+      border-bottom: 1px solid var(--border-subtle);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+      transition: all 0.3s ease;
+    }
+
+    .nav-container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0.9rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      text-decoration: none;
+    }
+
+    .brand-logo-svg {
+      height: 32px;
+      width: auto;
+      max-width: 140px;
+      flex-shrink: 0;
+    }
+
+    .brand-divider {
+      width: 1.5px;
+      height: 20px;
+      background: var(--border-strong);
+      border-radius: 1px;
+    }
+
+    .brand-sub {
+      font-size: 0.76rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--emerald-primary);
+      white-space: nowrap;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+    }
+
+    .nav-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 600;
+      transition: color 0.2s ease;
+      padding: 0.5rem 0.25rem;
+      position: relative;
+    }
+
+    .nav-links a:hover, .nav-links a.active {
+      color: var(--text-main);
+    }
+
+    .nav-links a:hover::after, .nav-links a.active::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      right: 0;
+      height: 2.5px;
+      background: linear-gradient(90deg, var(--emerald-primary), var(--cyan-primary));
+      border-radius: 2px;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.55rem 1.15rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border-radius: 8px;
+      text-decoration: none;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      cursor: pointer;
+      border: 1px solid transparent;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #059669 0%, #047857 100%);
+      color: #ffffff;
+      box-shadow: 0 2px 10px rgba(5, 150, 105, 0.25);
+    }
+
+    .btn-primary:hover {
+      box-shadow: 0 4px 16px rgba(5, 150, 105, 0.35);
+      transform: translateY(-1px);
+    }
+
+    .btn-outline {
+      background: #ffffff;
+      border-color: var(--border-strong);
+      color: var(--text-main);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+    }
+
+    .btn-outline:hover {
+      background: #f8fafc;
+      border-color: #94a3b8;
+    }
+
+    /* Container */
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 2rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Hero Section */
+    .hero {
+      padding: 4.5rem 0 3.5rem;
+      text-align: center;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.4rem 0.95rem;
+      border-radius: 9999px;
+      background: var(--emerald-light);
+      border: 1px solid var(--emerald-border);
+      color: #065f46;
+      font-size: 0.82rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 1px 3px rgba(5, 150, 105, 0.1);
+    }
+
+    .hero-badge .ping {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: var(--emerald-primary);
+      box-shadow: 0 0 8px var(--emerald-primary);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+
+    .hero-title {
+      font-size: 3.5rem;
+      font-weight: 800;
+      letter-spacing: -0.035em;
+      line-height: 1.15;
+      margin-bottom: 1.25rem;
+      color: #0f172a;
+    }
+
+    .hero-title span.gradient-text {
+      background: linear-gradient(135deg, #059669 0%, #0284c7 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-desc {
+      font-size: 1.18rem;
+      color: var(--text-muted);
+      max-width: 760px;
+      margin: 0 auto 2.5rem;
+      font-weight: 400;
+    }
+
+    .hero-meta-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.25rem;
+      max-width: 960px;
+      margin: 0 auto 1.5rem;
+    }
+
+    .meta-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 14px;
+      padding: 1.25rem;
+      text-align: left;
+      transition: all 0.25s ease;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .meta-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, var(--border-accent), transparent);
+      opacity: 0;
+      transition: opacity 0.25s;
+    }
+
+    .meta-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--border-strong);
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+    }
+
+    .meta-card:hover::before {
+      opacity: 1;
+    }
+
+    .meta-label {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.35rem;
+    }
+
+    .meta-val {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    /* Section Styling */
+    section {
+      padding: 4rem 0;
+      border-bottom: 1px solid var(--border-subtle);
+      scroll-margin-top: 96px;
+    }
+
+    .section-header {
+      margin-bottom: 2.5rem;
+    }
+
+    .section-tag {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 800;
+      color: var(--emerald-primary);
+      margin-bottom: 0.5rem;
+      display: block;
+    }
+
+    .section-title {
+      font-size: 2.2rem;
+      font-weight: 800;
+      letter-spacing: -0.025em;
+      color: #0f172a;
+      margin-bottom: 0.75rem;
+    }
+
+    .section-subtitle {
+      font-size: 1.05rem;
+      color: var(--text-muted);
+      max-width: 760px;
+    }
+
+    /* Flow Steps */
+    .steps-container {
+      display: flex;
+      flex-direction: column;
+      gap: 2.25rem;
+    }
+
+    .step-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 18px;
+      padding: 2.25rem;
+      display: grid;
+      grid-template-columns: 80px 1.1fr 1fr;
+      gap: 2rem;
+      align-items: start;
+      position: relative;
+      box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .step-card:hover {
+      border-color: #cbd5e1;
+      box-shadow: 0 8px 28px rgba(15, 23, 42, 0.08);
+      transform: translateY(-2px);
+    }
+
+    .step-num-badge {
+      width: 64px;
+      height: 64px;
+      border-radius: 16px;
+      background: var(--emerald-light);
+      border: 1px solid var(--emerald-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.75rem;
+      font-weight: 800;
+      color: var(--emerald-primary);
+      box-shadow: 0 2px 8px rgba(5, 150, 105, 0.12);
+    }
+
+    .step-info h3 {
+      font-size: 1.35rem;
+      font-weight: 800;
+      margin-bottom: 0.75rem;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .step-info p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      line-height: 1.6;
+      margin-bottom: 1.25rem;
+    }
+
+    .feature-bullets {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+
+    .feature-bullets li {
+      font-size: 0.88rem;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-weight: 500;
+    }
+
+    .bullet-check {
+      color: var(--emerald-primary);
+      font-weight: bold;
+    }
+
+    /* Terminal & Mock UI View (High-Contrast Dark Slate Container) */
+    .mock-preview {
+      background: #0b1120;
+      border: 1px solid #1e293b;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.18);
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+    }
+
+    .mock-header {
+      background: #111827;
+      padding: 0.6rem 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #1f2937;
+    }
+
+    .mock-dots {
+      display: flex;
+      gap: 6px;
+    }
+
+    .mock-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .dot-red { background: #ef4444; }
+    .dot-amber { background: #f59e0b; }
+    .dot-green { background: #10b981; }
+
+    .mock-title {
+      font-size: 0.75rem;
+      color: #94a3b8;
+      font-family: var(--font-sans);
+      font-weight: 600;
+    }
+
+    .mock-body {
+      padding: 1.25rem;
+      color: #cbd5e1;
+      line-height: 1.55;
+      overflow-x: auto;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.25rem 0.65rem;
+      border-radius: 9999px;
+      font-size: 0.74rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    .pill-green {
+      background: var(--emerald-light);
+      border: 1px solid var(--emerald-border);
+      color: #047857;
+    }
+
+    .pill-cyan {
+      background: var(--cyan-light);
+      border: 1px solid var(--cyan-border);
+      color: #0369a1;
+    }
+
+    .pill-amber {
+      background: var(--amber-light);
+      border: 1px solid var(--amber-border);
+      color: #b45309;
+    }
+
+    .pill-violet {
+      background: var(--violet-light);
+      border: 1px solid var(--violet-border);
+      color: #6d28d9;
+    }
+
+    /* Grid Layouts for AI Architecture */
+    .grid-2col {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.75rem;
+    }
+
+    .grid-4col {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.25rem;
+    }
+
+    .role-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 14px;
+      padding: 1.75rem;
+      transition: all 0.25s ease;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.03);
+    }
+
+    .role-card:hover {
+      border-color: #cbd5e1;
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+    }
+
+    .role-icon-wrapper {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1.25rem;
+    }
+
+    .icon-green { background: var(--emerald-light); color: var(--emerald-primary); border: 1px solid var(--emerald-border); }
+    .icon-cyan { background: var(--cyan-light); color: var(--cyan-primary); border: 1px solid var(--cyan-border); }
+    .icon-violet { background: var(--violet-light); color: var(--violet-accent); border: 1px solid var(--violet-border); }
+    .icon-amber { background: var(--amber-light); color: var(--amber-accent); border: 1px solid var(--amber-border); }
+
+    .role-card h4 {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: #0f172a;
+      margin-bottom: 0.5rem;
+    }
+
+    .role-card p {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+      margin-bottom: 1rem;
+    }
+
+    .role-code {
+      font-family: var(--font-mono);
+      font-size: 0.76rem;
+      background: var(--bg-surface-elevated);
+      padding: 0.5rem 0.75rem;
+      border-radius: 6px;
+      border: 1px solid var(--border-subtle);
+      color: #0369a1;
+      font-weight: 600;
+    }
+
+    /* Demo Script / Talk Track Accordions */
+    .demo-track-block {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 14px;
+      overflow: hidden;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.03);
+      transition: border-color 0.2s ease;
+    }
+
+    .demo-track-block:hover {
+      border-color: #cbd5e1;
+    }
+
+    .demo-track-header {
+      padding: 1.25rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--bg-surface-elevated);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .track-meta {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .track-time {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: #065f46;
+      background: var(--emerald-light);
+      padding: 0.25rem 0.65rem;
+      border-radius: 6px;
+      border: 1px solid var(--emerald-border);
+      font-weight: 700;
+    }
+
+    .track-title {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: #0f172a;
+    }
+
+    .demo-track-body {
+      padding: 1.5rem;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+
+    .talk-box {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: 10px;
+      padding: 1.25rem;
+    }
+
+    .talk-box h5 {
+      color: #047857;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 0.6rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-weight: 800;
+    }
+
+    .action-box {
+      background: #f0f9ff;
+      border: 1px solid #bae6fd;
+      border-radius: 10px;
+      padding: 1.25rem;
+    }
+
+    .action-box h5 {
+      color: #0369a1;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 0.6rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-weight: 800;
+    }
+
+    .quote-text {
+      font-size: 0.94rem;
+      color: #1e293b;
+      line-height: 1.6;
+      font-style: italic;
+    }
+
+    .action-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      font-size: 0.88rem;
+      color: var(--text-main);
+      font-weight: 500;
+    }
+
+    /* Code blocks & Copy button */
+    .code-block-wrapper {
+      position: relative;
+      margin: 1rem 0;
+    }
+
+    .code-block {
+      background: #0b1120;
+      border: 1px solid #1e293b;
+      border-radius: 10px;
+      padding: 1rem 1.25rem;
+      font-family: var(--font-mono);
+      font-size: 0.84rem;
+      color: #38bdf8;
+      overflow-x: auto;
+      line-height: 1.5;
+    }
+
+    .copy-btn {
+      position: absolute;
+      top: 0.6rem;
+      right: 0.6rem;
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #cbd5e1;
+      border-radius: 6px;
+      padding: 0.3rem 0.6rem;
+      font-size: 0.72rem;
+      font-family: var(--font-sans);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .copy-btn:hover {
+      background: rgba(255, 255, 255, 0.25);
+      color: #ffffff;
+    }
+
+    /* Comparison Table */
+    .table-responsive {
+      overflow-x: auto;
+      border: 1px solid var(--border-subtle);
+      border-radius: 14px;
+      background: var(--bg-surface);
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.03);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.9rem;
+    }
+
+    th {
+      background: var(--bg-surface-elevated);
+      padding: 1.1rem 1.5rem;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-dim);
+      border-bottom: 1px solid var(--border-subtle);
+      font-weight: 700;
+    }
+
+    td {
+      padding: 1.1rem 1.5rem;
+      border-bottom: 1px solid var(--border-subtle);
+      color: var(--text-main);
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:hover td {
+      background: #f8fafc;
+    }
+
+    /* Footer */
+    footer {
+      padding: 4rem 0 3rem;
+      border-top: 1px solid var(--border-subtle);
+      background: #ffffff;
+      text-align: center;
+    }
+
+    .footer-logo {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.85rem;
+      margin-bottom: 1rem;
+    }
+
+    .footer-logo-svg {
+      height: 26px;
+      width: auto;
+      max-width: 120px;
+      flex-shrink: 0;
+    }
+
+    .footer-tag {
+      font-size: 0.76rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--emerald-primary);
+    }
+
+    .footer-text {
+      color: var(--text-dim);
+      font-size: 0.85rem;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 1024px) {
+      .hero-title { font-size: 2.6rem; }
+      .hero-meta-grid { grid-template-columns: repeat(2, 1fr); }
+      .step-card { grid-template-columns: 60px 1fr; }
+      .mock-preview { grid-column: span 2; }
+      .grid-4col { grid-template-columns: repeat(2, 1fr); }
+      .demo-track-body { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 640px) {
+      .hero-title { font-size: 2.1rem; }
+      .hero-meta-grid { grid-template-columns: 1fr; }
+      .step-card { grid-template-columns: 1fr; }
+      .step-num-badge { margin-bottom: 1rem; }
+      .grid-2col { grid-template-columns: 1fr; }
+      .grid-4col { grid-template-columns: 1fr; }
+      .nav-links { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Subtle Ambient Glows -->
+  <div class="ambient-glow"></div>
+  <div class="ambient-glow-secondary"></div>
+
+  <!-- Header -->
+  <header>
+    <div class="nav-container">
+      <a href="#overview" class="brand-group">
+        <!-- Official Panacea InfoSec Vector Logo -->
+        <svg class="brand-logo-svg" viewBox="113 114 1879 585" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M0,0 L21,0 L34,4 L45,10 L55,19 L153,117 L153,119 L-56,120 L-58,123 L-57,160 L-51,333 L-49,405 L-48,418 L-42,430 L-31,443 L-18,456 L-7,465 L8,477 L22,487 L45,503 L64,515 L85,528 L89,530 L87,534 L48,573 L34,581 L20,585 L1,585 L-13,581 L-24,575 L-34,566 L-270,330 L-278,316 L-282,303 L-282,282 L-278,269 L-272,258 L-23,9 L-8,2 Z " fill="#DA1F43" transform="translate(395,114)"/>
+          <path d="M0,0 L193,0 L199,3 L201,6 L201,32 L196,180 L194,236 L190,244 L178,256 L167,265 L149,279 L131,292 L114,304 L97,315 L85,308 L60,291 L42,278 L28,267 L15,256 L3,244 L1,239 L0,225 L-4,98 L-7,14 L-7,7 L-4,2 Z " fill="#DA1F43" transform="translate(389,278)"/>
+          <path d="M0,0 L31,0 L50,2 L68,6 L84,12 L96,19 L104,26 L111,36 L116,47 L119,59 L120,69 L120,80 L118,95 L113,110 L106,121 L97,130 L84,138 L68,144 L51,148 L35,150 L1,150 L1,224 L-50,224 L-50,6 L-35,3 L-17,1 Z M7,43 L1,44 L1,107 L32,107 L47,104 L56,100 L63,94 L67,85 L68,80 L68,69 L65,59 L57,50 L45,45 L32,43 Z " fill="#383839" transform="translate(831,162)"/>
+          <path d="M0,0 L17,1 L33,5 L47,12 L58,21 L66,31 L73,45 L77,58 L79,70 L79,104 L78,105 L-29,105 L-26,115 L-20,124 L-11,130 L-1,134 L4,135 L33,135 L53,131 L63,128 L67,149 L69,161 L69,168 L54,173 L30,177 L19,178 L2,178 L-14,176 L-30,171 L-44,164 L-54,156 L-61,149 L-70,135 L-76,117 L-78,107 L-79,97 L-79,83 L-77,67 L-72,51 L-64,35 L-55,24 L-45,15 L-31,7 L-16,2 Z M-3,40 L-12,43 L-18,47 L-24,54 L-28,64 L-29,72 L33,72 L32,62 L26,50 L19,44 L13,41 L8,40 Z " fill="#383839" transform="translate(1742,213)"/>
+          <path d="M0,0 L21,1 L36,4 L49,9 L61,18 L69,29 L74,42 L76,51 L77,60 L77,168 L72,170 L43,175 L19,177 L-6,177 L-27,174 L-39,170 L-50,164 L-59,155 L-66,141 L-68,132 L-68,112 L-64,99 L-57,88 L-49,81 L-35,74 L-20,70 L-1,68 L21,69 L31,71 L28,55 L24,49 L19,45 L10,42 L-20,42 L-38,45 L-47,47 L-52,15 L-52,8 L-36,4 L-15,1 Z M0,101 L-11,104 L-19,111 L-20,113 L-20,127 L-16,134 L-8,138 L3,140 L15,140 L30,139 L31,138 L31,103 L30,102 L23,101 Z " fill="#383839" transform="translate(1915,213)"/>
+          <path d="M0,0 L21,1 L39,5 L55,13 L65,23 L72,37 L75,48 L76,54 L76,169 L43,175 L19,177 L-6,177 L-27,174 L-42,169 L-51,163 L-57,158 L-64,147 L-68,134 L-69,118 L-67,106 L-63,96 L-56,87 L-48,80 L-35,74 L-21,70 L-2,68 L8,68 L27,70 L30,71 L29,59 L24,49 L17,44 L10,42 L-20,42 L-38,45 L-47,47 L-53,11 L-52,8 L-31,3 L-15,1 Z M0,101 L-9,103 L-17,108 L-21,116 L-21,125 L-17,133 L-9,138 L3,140 L15,140 L30,139 L30,102 L22,101 Z " fill="#383839" transform="translate(1035,213)"/>
+          <path d="M0,0 L21,1 L39,5 L55,13 L65,23 L72,36 L76,54 L76,169 L43,175 L19,177 L-6,177 L-27,174 L-42,169 L-51,163 L-57,158 L-64,147 L-68,134 L-69,119 L-67,106 L-63,96 L-56,87 L-48,80 L-35,74 L-20,70 L-2,68 L8,68 L27,70 L30,71 L29,59 L24,49 L17,44 L10,42 L-20,42 L-38,45 L-47,47 L-53,11 L-52,8 L-31,3 L-15,1 Z M0,101 L-9,103 L-18,109 L-21,116 L-21,125 L-17,133 L-9,138 L3,140 L15,140 L30,139 L30,102 L23,101 Z " fill="#383839" transform="translate(1400,213)"/>
+          <path d="M0,0 L26,0 L44,3 L57,8 L67,15 L72,20 L78,27 L84,40 L88,58 L89,69 L89,172 L41,172 L40,75 L38,60 L34,50 L28,45 L19,42 L2,42 L-9,43 L-9,172 L-57,172 L-57,10 L-48,7 L-21,2 Z " fill="#383839" transform="translate(1211,214)"/>
+          <path d="M0,0 L19,1 L40,6 L48,9 L47,18 L39,48 L23,44 L17,43 L-3,43 L-13,46 L-21,51 L-28,59 L-33,71 L-35,85 L-35,94 L-33,108 L-29,119 L-22,128 L-12,133 L-4,135 L22,135 L40,131 L45,130 L51,163 L51,169 L45,172 L29,176 L12,178 L-5,178 L-21,176 L-37,171 L-51,164 L-64,153 L-72,142 L-78,130 L-82,117 L-84,106 L-85,85 L-83,68 L-78,52 L-71,38 L-64,29 L-53,18 L-42,11 L-32,6 L-18,2 Z " fill="#DA1F43" transform="translate(1596,213)"/>
+          <path d="M0,0 L25,0 L30,5 L37,12 L46,23 L60,41 L73,59 L88,81 L89,0 L120,0 L120,141 L93,141 L81,120 L67,98 L53,78 L40,61 L32,51 L31,141 L0,141 L-1,140 L-1,1 Z " fill="#DA1F43" transform="translate(848,445)"/>
+          <path d="M0,0 L16,0 L31,3 L43,8 L52,14 L61,22 L70,36 L75,49 L77,58 L78,69 L78,78 L76,94 L71,109 L65,120 L54,132 L43,139 L31,144 L22,146 L13,147 L2,147 L-15,144 L-28,139 L-38,132 L-48,122 L-55,111 L-60,97 L-62,87 L-62,60 L-58,44 L-50,28 L-39,16 L-29,9 L-18,4 L-7,1 Z M3,28 L-6,30 L-16,36 L-23,45 L-28,57 L-29,62 L-29,85 L-25,98 L-19,108 L-10,115 L-2,118 L10,119 L20,117 L30,112 L37,104 L42,94 L44,86 L45,70 L43,56 L38,44 L30,35 L18,29 L13,28 Z " fill="#DA1F43" transform="translate(1169,442)"/>
+          <path d="M0,0 L94,0 L94,27 L31,27 L31,54 L87,54 L87,81 L31,81 L31,114 L99,114 L99,141 L-1,141 L-1,1 Z " fill="#DA1F43" transform="translate(1389,445)"/>
+          <path d="M0,0 L19,0 L34,3 L48,8 L50,9 L49,16 L42,35 L33,32 L23,29 L8,28 L-3,30 L-7,32 L-9,36 L-9,44 L-4,50 L6,55 L27,63 L42,71 L51,80 L55,88 L57,95 L57,114 L53,125 L47,133 L40,139 L28,144 L19,146 L9,147 L-6,147 L-26,144 L-40,139 L-45,136 L-42,125 L-37,111 L-32,112 L-18,117 L-12,118 L12,118 L21,114 L23,110 L23,100 L19,95 L3,87 L-18,79 L-28,73 L-33,69 L-40,59 L-43,48 L-43,36 L-39,23 L-32,14 L-25,8 L-14,3 Z " fill="#DA1F43" transform="translate(1308,442)"/>
+          <path d="M0,0 L18,0 L34,3 L47,8 L52,11 L44,34 L43,36 L38,35 L26,31 L11,29 L-2,30 L-14,35 L-17,38 L-19,38 L-21,42 L-27,53 L-29,62 L-29,84 L-26,96 L-21,105 L-19,109 L-15,111 L-5,116 L0,117 L22,117 L38,113 L45,111 L49,121 L54,136 L44,141 L30,145 L14,147 L0,147 L-14,145 L-27,141 L-38,135 L-47,127 L-54,117 L-59,106 L-63,89 L-64,71 L-62,54 L-57,39 L-51,28 L-40,16 L-30,9 L-19,4 L-8,1 Z " fill="#DA1F43" transform="translate(1567,442)"/>
+          <path d="M0,0 L7,6 L52,51 L60,65 L64,78 L64,98 L61,109 L54,123 L43,135 L-5,183 L-6,183 L-6,151 L-1,3 Z " fill="#DA1F43" transform="translate(634,318)"/>
+          <path d="M0,0 L93,0 L94,1 L94,27 L31,27 L31,56 L86,56 L87,57 L87,83 L31,83 L31,141 L-1,141 L-1,1 Z " fill="#DA1F43" transform="translate(1000,445)"/>
+          <path d="M0,0 L31,0 L32,1 L32,140 L31,141 L0,141 Z " fill="#DA1F43" transform="translate(785,445)"/>
+        </svg>
+        <div class="brand-divider"></div>
+        <span class="brand-sub">AI Evidence Collector</span>
+      </a>
+
+      <nav class="nav-links">
+        <a href="#overview" class="active">Overview</a>
+        <a href="#demo-steps">Walkthrough</a>
+        <a href="#ai-agent">AI Agent</a>
+        <a href="#demo-script">Demo Script</a>
+        <a href="#collectors">Collectors</a>
+        <a href="#quickstart">Quickstart</a>
+      </nav>
+
+      <div class="nav-actions">
+        <a href="http://localhost:5173" target="_blank" class="btn btn-outline">Open Live App</a>
+        <a href="#quickstart" class="btn btn-primary">Start Demo Server</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Container -->
+  <main class="container">
+
+    <!-- ========================================== -->
+    <!-- SECTION 1: HERO & KEY METRICS              -->
+    <!-- ========================================== -->
+    <section id="overview" class="hero" style="border-top: none;">
+      <div class="hero-badge">
+        <span class="ping"></span>
+        Panacea InfoSec Compliance Automation Suite
+      </div>
+      <h1 class="hero-title">
+        Next-Gen Autonomous <br />
+        <span class="gradient-text">Compliance Evidence Collection</span>
+      </h1>
+      <p class="hero-desc">
+        Eliminate audit panic. Automatically harvest tamper-proof evidence across AWS, Cloud APIs, Documents, and Web Consoles — graded in real time by an AI SOC 2 auditor.
+      </p>
+
+      <!-- Key Metrics / Meta Strip -->
+      <div class="hero-meta-grid">
+        <div class="meta-card">
+          <div class="meta-label">Audit Readiness</div>
+          <div class="meta-val" style="color: var(--emerald-primary);">100% Ready <span class="pill pill-green">Passing</span></div>
+        </div>
+        <div class="meta-card">
+          <div class="meta-label">Supported Collectors</div>
+          <div class="meta-val">4 Active <span class="pill pill-cyan">Plug & Play</span></div>
+        </div>
+        <div class="meta-card">
+          <div class="meta-label">Evidence Verification</div>
+          <div class="meta-val">SHA-256 <span class="pill pill-violet">Immutable</span></div>
+        </div>
+        <div class="meta-card">
+          <div class="meta-label">AI Agent Architecture</div>
+          <div class="meta-val">Zero-Blocking <span class="pill pill-amber">Self-Healing</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- SECTION 2: 5-STEP WALKTHROUGH              -->
+    <!-- ========================================== -->
+    <section id="demo-steps">
+      <div class="section-header">
+        <span class="section-tag">Step-by-Step Operational Flow</span>
+        <h2 class="section-title">The Complete Evidence Collection Lifecycle</h2>
+        <p class="section-subtitle">
+          How Panacea InfoSec moves an organization from vague compliance frameworks to an immutable, auditor-ready evidence package in five minutes.
+        </p>
+      </div>
+
+      <div class="steps-container">
+
+        <!-- STEP 1 -->
+        <div class="step-card">
+          <div class="step-num-badge">01</div>
+          <div class="step-info">
+            <h3>
+              Audit Readiness Cockpit
+              <span class="pill pill-green">Executive View</span>
+            </h3>
+            <p>
+              The primary executive dashboard calculates the continuous readiness score. It categorizes controls into <strong>Satisfied</strong>, <strong>Gaps Found</strong>, and <strong>Stale Evidence</strong> based on cryptographic age and AI evaluations.
+            </p>
+            <ul class="feature-bullets">
+              <li><span class="bullet-check">✓</span> Real-time percentage score with color-coded health badges.</li>
+              <li><span class="bullet-check">✓</span> Stale evidence detection: alerts operators if proof exceeds validity TTL.</li>
+              <li><span class="bullet-check">✓</span> One-click <em>"Run All Scheduled Collectors"</em> batch trigger.</li>
+            </ul>
+          </div>
+          <div class="mock-preview">
+            <div class="mock-header">
+              <div class="mock-dots">
+                <div class="mock-dot dot-red"></div>
+                <div class="mock-dot dot-amber"></div>
+                <div class="mock-dot dot-green"></div>
+              </div>
+              <div class="mock-title">Dashboard Status // Audit Readiness</div>
+            </div>
+            <div class="mock-body">
+<span style="color:#64748b;">// System Health State</span>
+Total Controls: <span style="color:#38bdf8;">14 SOC 2 Controls</span>
+Readiness Score: <span style="color:#10b981; font-weight:bold;">100% COMPLIANT</span>
+Status Breakdown:
+ • <span style="color:#10b981;">● 12 Satisfied Controls</span>
+ • <span style="color:#f59e0b;">● 2 Unbound (Pending Collector Setup)</span>
+ • <span style="color:#ef4444;">● 0 Unresolved Gaps</span>
+
+Audit Window: <span style="color:#cbd5e1;">Continuous (Q4 2026 Active)</span>
+Last Auto-Scan: <span style="color:#cbd5e1;">Just now via Background Daemon</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 2 -->
+        <div class="step-card">
+          <div class="step-num-badge">02</div>
+          <div class="step-info">
+            <h3>
+              GRC Controls Checklist & CSV Import
+              <span class="pill pill-cyan">Framework Ingestion</span>
+            </h3>
+            <p>
+              Import controls from Vanta, Drata, Secureframe, or custom spreadsheets via CSV. The system immediately parses each control and pairs it with intelligent collection recommendations.
+            </p>
+            <ul class="feature-bullets">
+              <li><span class="bullet-check">✓</span> Standardized schema: Control Code (CC6.1), Title, Description, and Framework.</li>
+              <li><span class="bullet-check">✓</span> <strong>Hybrid Seam:</strong> Instantly suggests whether to use an AWS call, HTTP API, or Playwright screenshot.</li>
+              <li><span class="bullet-check">✓</span> Filter by Framework (SOC 2, ISO 27001, HIPAA) and status.</li>
+            </ul>
+          </div>
+          <div class="mock-preview">
+            <div class="mock-header">
+              <div class="mock-dots">
+                <div class="mock-dot dot-red"></div>
+                <div class="mock-dot dot-amber"></div>
+                <div class="mock-dot dot-green"></div>
+              </div>
+              <div class="mock-title">checklist.import_csv // GRC Parser</div>
+            </div>
+            <div class="mock-body">
+<span style="color:#10b981;">[SUCCESS]</span> Imported 14 Controls from SOC2_Master.csv
+
+<span style="color:#38bdf8;">CC6.1 - Logical Access Controls</span>
+ ↳ Suggestion: <span class="pill pill-cyan">aws</span> (IAM Password Policy)
+
+<span style="color:#38bdf8;">CC6.6 - Boundary Protection / WAF</span>
+ ↳ Suggestion: <span class="pill pill-green">http_api</span> (Cloudflare Edge API)
+
+<span style="color:#38bdf8;">CC2.1 - Information Security Policy</span>
+ ↳ Suggestion: <span class="pill pill-amber">document</span> (PDF Export)
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 3 -->
+        <div class="step-card">
+          <div class="step-num-badge">03</div>
+          <div class="step-info">
+            <h3>
+              AI-Assisted Collector Binding
+              <span class="pill pill-violet">Autonomous Config</span>
+            </h3>
+            <p>
+              Binding a control to an evidence source takes one click. The AI Agent acts as a Configuration Author, reading the requirement and drafting a valid collector config matching target APIs.
+            </p>
+            <ul class="feature-bullets">
+              <li><span class="bullet-check">✓</span> <strong>AI Draft Button:</strong> Creates complete JSON queries with headers and URLs.</li>
+              <li><span class="bullet-check">✓</span> Schedule intervals from 5 minutes (continuous) to daily/weekly.</li>
+              <li><span class="bullet-check">✓</span> Sample Fallbacks: Demo the loop even before cloud credentials are plugged in!</li>
+            </ul>
+          </div>
+          <div class="mock-preview">
+            <div class="mock-header">
+              <div class="mock-dots">
+                <div class="mock-dot dot-red"></div>
+                <div class="mock-dot dot-amber"></div>
+                <div class="mock-dot dot-green"></div>
+              </div>
+              <div class="mock-title">POST /api/controls/1/draft-config</div>
+            </div>
+            <div class="mock-body">
+<span style="color:#c084fc;">AI Draft Output for CC6.1 (Password Policy):</span>
+{
+  <span style="color:#38bdf8;">"service"</span>: "iam",
+  <span style="color:#38bdf8;">"operation"</span>: "get_account_password_policy",
+  <span style="color:#38bdf8;">"params"</span>: {},
+  <span style="color:#38bdf8;">"region"</span>: "us-east-1"
+}
+
+<span style="color:#64748b;">// Validated against _COLLECTOR_SHAPES. Ready to bind.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 4 -->
+        <div class="step-card">
+          <div class="step-num-badge">04</div>
+          <div class="step-info">
+            <h3>
+              Deterministic Execution & Proof Hashing
+              <span class="pill pill-green">Cryptographic Audit Trail</span>
+            </h3>
+            <p>
+              The collector executes deterministically. Raw response bytes are saved in date-partitioned storage and stamped with a <strong>SHA-256 cryptographic hash</strong> to ensure anti-tamper compliance.
+            </p>
+            <ul class="feature-bullets">
+              <li><span class="bullet-check">✓</span> Zero LLM hallucination in data gathering: raw data is direct from source.</li>
+              <li><span class="bullet-check">✓</span> Partitioned storage: <code>evidence/YYYY-MM-DD/run{id}/{filename}</code>.</li>
+              <li><span class="bullet-check">✓</span> Immediate alert webhooks on collection failures (Slack/Teams).</li>
+            </ul>
+          </div>
+          <div class="mock-preview">
+            <div class="mock-header">
+              <div class="mock-dots">
+                <div class="mock-dot dot-red"></div>
+                <div class="mock-dot dot-amber"></div>
+                <div class="mock-dot dot-green"></div>
+              </div>
+              <div class="mock-title">runner.collect_binding // Evidence Hash</div>
+            </div>
+            <div class="mock-body">
+<span style="color:#10b981;">[RUN #104 COMPLETED]</span>
+Artifact: <span style="color:#f1f5f9;">aws-iam-get_account_password_policy.json</span>
+File Size: <span style="color:#cbd5e1;">248 bytes</span>
+Storage Path: <span style="color:#64748b;">evidence/2026-10-08/run104/...</span>
+
+<span style="color:#f59e0b;">SHA-256 Digest:</span>
+<span style="color:#38bdf8;">4a88f729b2f6ef5394be0841961ec908c6ff96c01...</span>
+Status: <span style="color:#10b981;">VERIFIED_IMMUTABLE</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 5 -->
+        <div class="step-card">
+          <div class="step-num-badge">05</div>
+          <div class="step-info">
+            <h3>
+              The AI Auditor Assessment
+              <span class="pill pill-amber">Mock SOC 2 Audit</span>
+            </h3>
+            <p>
+              Immediately after evidence lands, the AI Auditor reads the artifact against the control criteria. It outputs a verdict, finding summary, gap alert, and statistical confidence score.
+            </p>
+            <ul class="feature-bullets">
+              <li><span class="bullet-check">✓</span> Verdict: <strong>Satisfies Control</strong> or <strong>Gap Found</strong>.</li>
+              <li><span class="bullet-check">✓</span> Confidence rating (e.g. <em>95% confidence</em>).</li>
+              <li><span class="bullet-check">✓</span> Highlights exact missing controls (e.g., "Min password length is 8, required is 14").</li>
+            </ul>
+          </div>
+          <div class="mock-preview">
+            <div class="mock-header">
+              <div class="mock-dots">
+                <div class="mock-dot dot-red"></div>
+                <div class="mock-dot dot-amber"></div>
+                <div class="mock-dot dot-green"></div>
+              </div>
+              <div class="mock-title">agent.assess_evidence // Audit Verdict</div>
+            </div>
+            <div class="mock-body">
+{
+  <span style="color:#38bdf8;">"satisfied"</span>: <span style="color:#10b981;">true</span>,
+  <span style="color:#38bdf8;">"summary"</span>: "Password policy enforces 14+ characters, symbol and number requirements, and 90-day rotation.",
+  <span style="color:#38bdf8;">"gaps"</span>: "",
+  <span style="color:#38bdf8;">"confidence"</span>: <span style="color:#f59e0b;">0.95</span>
+}
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- SECTION 3: AI AGENT ROLES & ARCHITECTURE   -->
+    <!-- ========================================== -->
+    <section id="ai-agent">
+      <div class="section-header">
+        <span class="section-tag">Internal Intelligence Core</span>
+        <h2 class="section-title">The Four Roles of the AI Agent</h2>
+        <p class="section-subtitle">
+          All AI reasoning is isolated in <code>agent.py</code> and <code>checklist.py</code>. The application pairs high-level intelligence with deterministic safeguards.
+        </p>
+      </div>
+
+      <div class="grid-4col" style="margin-bottom: 2.5rem;">
+        <!-- Role 1 -->
+        <div class="role-card">
+          <div>
+            <div class="role-icon-wrapper icon-green">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+            </div>
+            <h4>1. Collector Mapper</h4>
+            <p>Reads control titles and descriptions to select the exact right collector type (AWS, API, Doc, or Screenshot).</p>
+          </div>
+          <div class="role-code">checklist.suggest_collector()</div>
+        </div>
+
+        <!-- Role 2 -->
+        <div class="role-card">
+          <div>
+            <div class="role-icon-wrapper icon-cyan">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </div>
+            <h4>2. Config Author</h4>
+            <p>Drafts compliant JSON configurations matching target collector schemas, complete with realistic endpoints.</p>
+          </div>
+          <div class="role-code">agent.draft_config()</div>
+        </div>
+
+        <!-- Role 3 -->
+        <div class="role-card">
+          <div>
+            <div class="role-icon-wrapper icon-amber">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            </div>
+            <h4>3. Auditor Evaluator</h4>
+            <p>Inspects gathered artifacts against compliance text, calculating satisfaction, gap commentary, and confidence scores.</p>
+          </div>
+          <div class="role-code">agent.assess_evidence()</div>
+        </div>
+
+        <!-- Role 4 -->
+        <div class="role-card">
+          <div>
+            <div class="role-icon-wrapper icon-violet">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+            </div>
+            <h4>4. Autonomous Planner</h4>
+            <p>Accepts natural language goals, plans the collector vector, generates config, and stamps the plan into audit metadata.</p>
+          </div>
+          <div class="role-code">agent.plan_collection()</div>
+        </div>
+      </div>
+
+      <!-- Architectural Resilience Comparison -->
+      <h3 style="font-size: 1.45rem; font-weight: 800; margin-bottom: 1.25rem; color: #0f172a;">Graceful Degradation: Zero-Crash Guarantee</h3>
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>Agent Role</th>
+              <th>When AI is Connected (OpenAI / DeepSeek)</th>
+              <th>When AI is Offline (No API Key / Outage)</th>
+              <th>System Safety Impact</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Collector Mapper</strong></td>
+              <td>Semantic comprehension of control text and intent.</td>
+              <td>Heuristic keyword regex (e.g. "policy" $\rightarrow$ document, "mfa" $\rightarrow$ http_api).</td>
+              <td><span class="pill pill-green">Zero-Block Fallback</span></td>
+            </tr>
+            <tr>
+              <td><strong>Config Author</strong></td>
+              <td>Customized JSON parameters tailored to specific systems.</td>
+              <td>Pre-defined schema template skeletons.</td>
+              <td><span class="pill pill-green">Operator fills in blank</span></td>
+            </tr>
+            <tr>
+              <td><strong>Auditor Evaluator</strong></td>
+              <td>Automated gap analysis, audit summary, confidence score.</td>
+              <td>Raw artifacts preserved; pending human reviewer flag.</td>
+              <td><span class="pill pill-green">Evidence preserved safely</span></td>
+            </tr>
+            <tr>
+              <td><strong>Autonomous Planner</strong></td>
+              <td>Natural-language goal translated into multi-step collection.</td>
+              <td>Surfaces an auditable error record; never crashes process.</td>
+              <td><span class="pill pill-green">Audit record preserved</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- SECTION 4: STAKEHOLDER DEMO TALK-TRACK     -->
+    <!-- ========================================== -->
+    <section id="demo-script">
+      <div class="section-header">
+        <span class="section-tag">Presenter Playbook</span>
+        <h2 class="section-title">5-Minute Live Stakeholder Demo Guide</h2>
+        <p class="section-subtitle">
+          A turnkey talk-track with exact spoken scripts and UI click sequences designed to showcase the platform to executives, CISOs, or compliance auditors.
+        </p>
+      </div>
+
+      <!-- Phase 1 -->
+      <div class="demo-track-block">
+        <div class="demo-track-header">
+          <div class="track-meta">
+            <span class="track-time">00:00 - 01:15</span>
+            <span class="track-title">Phase 1: The Audit Readiness Dashboard</span>
+          </div>
+          <span class="pill pill-green">The Hook</span>
+        </div>
+        <div class="demo-track-body">
+          <div class="talk-box">
+            <h5>🎙️ What to Say (Presenter Script)</h5>
+            <p class="quote-text">
+              "Welcome everyone. Traditional compliance is broken. Companies spend 3 to 4 months in pure panic taking screenshots and begging engineers for logs before an audit. Panacea InfoSec turns compliance from an annual fire drill into a continuous, real-time dashboard. Here on our Audit Readiness Cockpit, you can see our live readiness score: 100% compliant, with zero unresolved gaps."
+            </p>
+          </div>
+          <div class="action-box">
+            <h5>🖱️ What to Do in the UI</h5>
+            <ul class="action-list">
+              <li>1. Open the app on the <strong>Audit Readiness</strong> tab.</li>
+              <li>2. Point out the primary circular/progress score.</li>
+              <li>3. Highlight the 3 status cards: Satisfied, Gap, and Stale evidence.</li>
+              <li>4. Explain that every metric is backed by live data, not static declarations.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Phase 2 -->
+      <div class="demo-track-block">
+        <div class="demo-track-header">
+          <div class="track-meta">
+            <span class="track-time">01:15 - 02:45</span>
+            <span class="track-title">Phase 2: Controls Checklist & AI Suggestions</span>
+          </div>
+          <span class="pill pill-cyan">The Magic</span>
+        </div>
+        <div class="demo-track-body">
+          <div class="talk-box">
+            <h5>🎙️ What to Say (Presenter Script)</h5>
+            <p class="quote-text">
+              "When we navigate to our Controls Checklist, we see controls imported directly from GRC frameworks like SOC 2 or ISO 27001. Notice how we don't need an engineer to guess how to gather evidence: our AI Agent maps each requirement to the appropriate collector. For AWS Password Policies, it suggests our AWS SDK collector; for Web Consoles, our Playwright screenshot engine."
+            </p>
+          </div>
+          <div class="action-box">
+            <h5>🖱️ What to Do in the UI</h5>
+            <ul class="action-list">
+              <li>1. Click on the <strong>Controls Checklist</strong> tab in the sidebar.</li>
+              <li>2. Show the filter pills (All, Bound, Unbound).</li>
+              <li>3. Click <strong>Bind Collector</strong> on an unbound control.</li>
+              <li>4. In the modal, click <strong>"Suggest with AI"</strong> and <strong>"Draft Config with AI"</strong> to show the instantaneous JSON generation.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Phase 3 -->
+      <div class="demo-track-block">
+        <div class="demo-track-header">
+          <div class="track-meta">
+            <span class="track-time">02:45 - 04:00</span>
+            <span class="track-title">Phase 3: Execution, Immutability & The AI Auditor</span>
+          </div>
+          <span class="pill pill-amber">The Proof</span>
+        </div>
+        <div class="demo-track-body">
+          <div class="talk-box">
+            <h5>🎙️ What to Say (Presenter Script)</h5>
+            <p class="quote-text">
+              "Now watch what happens when collection runs. The system pulls the real configuration directly from the cloud or API. It stamps the evidence with a SHA-256 cryptographic hash so no one can ever tamper with it. But we don't stop there: our AI Agent then acts as an auditor, reading the file and grading it. Here you see it found 95% confidence that the password policy satisfies the control!"
+            </p>
+          </div>
+          <div class="action-box">
+            <h5>🖱️ What to Do in the UI</h5>
+            <ul class="action-list">
+              <li>1. Click <strong>"Collect Now"</strong> on any bound control row.</li>
+              <li>2. Observe the progress state and immediate success badge.</li>
+              <li>3. Expand the row or open the <strong>Activity Log</strong> to reveal the AI Assessment: <em>"Satisfies control (95% confidence)"</em> with the summary explanation.</li>
+              <li>4. Point out the SHA-256 fingerprint.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Phase 4 -->
+      <div class="demo-track-block">
+        <div class="demo-track-header">
+          <div class="track-meta">
+            <span class="track-time">04:00 - 05:00</span>
+            <span class="track-title">Phase 4: Evidence Library & Audit Hand-Off</span>
+          </div>
+          <span class="pill pill-violet">The Close</span>
+        </div>
+        <div class="demo-track-body">
+          <div class="talk-box">
+            <h5>🎙️ What to Say (Presenter Script)</h5>
+            <p class="quote-text">
+              "Finally, when your real auditor arrives, you don't send 50 disorganized emails. You open the Evidence Library. Every piece of evidence is indexed, timestamped, and cryptographically verified. An entire SOC 2 Type II audit package can be handed off in seconds. Panacea InfoSec gives you continuous compliance with zero stress."
+            </p>
+          </div>
+          <div class="action-box">
+            <h5>🖱️ What to Do in the UI</h5>
+            <ul class="action-list">
+              <li>1. Navigate to <strong>Evidence Library</strong>.</li>
+              <li>2. Show the search bar, file type badges, and download triggers.</li>
+              <li>3. Conclude with a strong closing statement and invite questions.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- SECTION 5: DETERMINISTIC COLLECTORS        -->
+    <!-- ========================================== -->
+    <section id="collectors">
+      <div class="section-header">
+        <span class="section-tag">Plug & Play Data Ingestion</span>
+        <h2 class="section-title">The Four Deterministic Evidence Collectors</h2>
+        <p class="section-subtitle">
+          All evidence collection is deterministic, auditable, and immutable. No unpredictable scraping or hallucinations.
+        </p>
+      </div>
+
+      <div class="grid-2col">
+        <!-- AWS Collector -->
+        <div class="meta-card" style="padding: 1.75rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h3 style="color: #0f172a; font-size: 1.25rem; font-weight: 800;">AWS Collector (<code>aws</code>)</h3>
+            <span class="pill pill-cyan">Boto3 SDK</span>
+          </div>
+          <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">
+            Direct read-only describe/list/get calls against AWS IAM, CloudTrail, S3, KMS, and GuardDuty.
+          </p>
+          <div class="code-block-wrapper">
+            <pre class="code-block">
+{
+  "service": "iam",
+  "operation": "get_account_password_policy",
+  "region": "us-east-1"
+}</pre>
+          </div>
+          <p style="font-size: 0.82rem; color: var(--emerald-primary); font-weight: 600;">
+            ✦ Built-in Sample Mode: Generates representative realistic fixtures when AWS credentials are not yet set.
+          </p>
+        </div>
+
+        <!-- HTTP API Collector -->
+        <div class="meta-card" style="padding: 1.75rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h3 style="color: #0f172a; font-size: 1.25rem; font-weight: 800;">HTTP API Collector (<code>http_api</code>)</h3>
+            <span class="pill pill-green">REST / GraphQL</span>
+          </div>
+          <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">
+            Connects to GitHub, Okta, Jira, Datadog, Cloudflare, or internal microservices over HTTP.
+          </p>
+          <div class="code-block-wrapper">
+            <pre class="code-block">
+{
+  "url": "https://api.github.com/repos/org/repo/branches/main/protection",
+  "method": "GET",
+  "headers": { "Authorization": "Bearer $GITHUB_TOKEN" }
+}</pre>
+          </div>
+          <p style="font-size: 0.82rem; color: var(--cyan-primary); font-weight: 600;">
+            ✦ Secret Resolution: Safely resolves environment secrets (e.g. <code>$API_KEY</code>) at runtime.
+          </p>
+        </div>
+
+        <!-- Document Collector -->
+        <div class="meta-card" style="padding: 1.75rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h3 style="color: #0f172a; font-size: 1.25rem; font-weight: 800;">Document Collector (<code>document</code>)</h3>
+            <span class="pill pill-violet">PDF / Policy Fetcher</span>
+          </div>
+          <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">
+            Pulls policy documents, security manuals, exported reports, or Drive attachments over secure HTTP.
+          </p>
+          <div class="code-block-wrapper">
+            <pre class="code-block">
+{
+  "url": "https://company.internal/policies/info_sec_policy.pdf",
+  "filename": "Information_Security_Policy_v4.pdf"
+}</pre>
+          </div>
+          <p style="font-size: 0.82rem; color: var(--violet-accent); font-weight: 600;">
+            ✦ Binary Safe: Preserves exact PDF binary integrity with full cryptographic verification.
+          </p>
+        </div>
+
+        <!-- Screenshot Collector -->
+        <div class="meta-card" style="padding: 1.75rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h3 style="color: #0f172a; font-size: 1.25rem; font-weight: 800;">Screenshot Collector (<code>screenshot</code>)</h3>
+            <span class="pill pill-amber">Playwright Headless</span>
+          </div>
+          <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">
+            Automates headless Chromium to snap high-resolution proof from web consoles that lack public APIs.
+          </p>
+          <div class="code-block-wrapper">
+            <pre class="code-block">
+{
+  "url": "https://dashboard.stripe.com/settings/security",
+  "full_page": true,
+  "wait_ms": 2500
+}</pre>
+          </div>
+          <p style="font-size: 0.82rem; color: var(--amber-accent); font-weight: 600;">
+            ✦ Lazy Loading: Imports Playwright only when called so server starts in milliseconds.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- SECTION 6: CLI & QUICKSTART                -->
+    <!-- ========================================== -->
+    <section id="quickstart">
+      <div class="section-header">
+        <span class="section-tag">Developer & DevOps Guide</span>
+        <h2 class="section-title">Starting the Stack & Verification CLI</h2>
+        <p class="section-subtitle">
+          Commands to run the FastAPI backend, the React + Tailwind frontend, and test autonomous collector jobs.
+        </p>
+      </div>
+
+      <div class="grid-2col">
+        <!-- Backend Run -->
+        <div>
+          <h4 style="color: #0f172a; font-size: 1.1rem; font-weight: 800; margin-bottom: 0.5rem;">1. Start FastAPI Backend (Port 8000)</h4>
+          <div class="code-block-wrapper">
+            <button class="copy-btn" onclick="copySnippet(this, 'cd backend\nvenv\\Scripts\\activate\nuvicorn app.main:app --reload --port 8000')">Copy</button>
+            <pre class="code-block">cd backend
+venv\Scripts\activate
+uvicorn app.main:app --reload --port 8000</pre>
+          </div>
+
+          <h4 style="color: #0f172a; font-size: 1.1rem; font-weight: 800; margin-top: 1.5rem; margin-bottom: 0.5rem;">2. Start Vite + React Frontend (Port 5173)</h4>
+          <div class="code-block-wrapper">
+            <button class="copy-btn" onclick="copySnippet(this, 'cd frontend\nnpm run dev')">Copy</button>
+            <pre class="code-block">cd frontend
+npm run dev</pre>
+          </div>
+        </div>
+
+        <!-- Self Check & Verification -->
+        <div>
+          <h4 style="color: #0f172a; font-size: 1.1rem; font-weight: 800; margin-bottom: 0.5rem;">3. Run System Self-Check Diagnostic</h4>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem;">
+            Tests collectors, hashing algorithms, and AI agent endpoints end-to-end:
+          </p>
+          <div class="code-block-wrapper">
+            <button class="copy-btn" onclick="copySnippet(this, 'cd backend\npython -m app.selfcheck')">Copy</button>
+            <pre class="code-block">cd backend
+python -m app.selfcheck</pre>
+          </div>
+
+          <h4 style="color: #0f172a; font-size: 1.1rem; font-weight: 800; margin-top: 1.5rem; margin-bottom: 0.5rem;">4. Environment Variables (.env)</h4>
+          <div class="code-block-wrapper">
+            <pre class="code-block" style="color: #cbd5e1;">
+<span style="color:#64748b;"># Optional: Plug in any OpenAI-compatible endpoint</span>
+AI_API_KEY=your_key_here
+AI_BASE_URL=https://agentrouter.org/v1
+AI_MODEL=deepseek-v4-flash
+ALERT_WEBHOOK=https://your-webhook-endpoint.example/alerts
+</pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <div class="footer-logo">
+        <svg class="footer-logo-svg" viewBox="113 114 1879 585" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M0,0 L21,0 L34,4 L45,10 L55,19 L153,117 L153,119 L-56,120 L-58,123 L-57,160 L-51,333 L-49,405 L-48,418 L-42,430 L-31,443 L-18,456 L-7,465 L8,477 L22,487 L45,503 L64,515 L85,528 L89,530 L87,534 L48,573 L34,581 L20,585 L1,585 L-13,581 L-24,575 L-34,566 L-270,330 L-278,316 L-282,303 L-282,282 L-278,269 L-272,258 L-23,9 L-8,2 Z " fill="#DA1F43" transform="translate(395,114)"/>
+          <path d="M0,0 L193,0 L199,3 L201,6 L201,32 L196,180 L194,236 L190,244 L178,256 L167,265 L149,279 L131,292 L114,304 L97,315 L85,308 L60,291 L42,278 L28,267 L15,256 L3,244 L1,239 L0,225 L-4,98 L-7,14 L-7,7 L-4,2 Z " fill="#DA1F43" transform="translate(389,278)"/>
+          <path d="M0,0 L31,0 L50,2 L68,6 L84,12 L96,19 L104,26 L111,36 L116,47 L119,59 L120,69 L120,80 L118,95 L113,110 L106,121 L97,130 L84,138 L68,144 L51,148 L35,150 L1,150 L1,224 L-50,224 L-50,6 L-35,3 L-17,1 Z M7,43 L1,44 L1,107 L32,107 L47,104 L56,100 L63,94 L67,85 L68,80 L68,69 L65,59 L57,50 L45,45 L32,43 Z " fill="#383839" transform="translate(831,162)"/>
+          <path d="M0,0 L17,1 L33,5 L47,12 L58,21 L66,31 L73,45 L77,58 L79,70 L79,104 L78,105 L-29,105 L-26,115 L-20,124 L-11,130 L-1,134 L4,135 L33,135 L53,131 L63,128 L67,149 L69,161 L69,168 L54,173 L30,177 L19,178 L2,178 L-14,176 L-30,171 L-44,164 L-54,156 L-61,149 L-70,135 L-76,117 L-78,107 L-79,97 L-79,83 L-77,67 L-72,51 L-64,35 L-55,24 L-45,15 L-31,7 L-16,2 Z M-3,40 L-12,43 L-18,47 L-24,54 L-28,64 L-29,72 L33,72 L32,62 L26,50 L19,44 L13,41 L8,40 Z " fill="#383839" transform="translate(1742,213)"/>
+          <path d="M0,0 L21,1 L36,4 L49,9 L61,18 L69,29 L74,42 L76,51 L77,60 L77,168 L72,170 L43,175 L19,177 L-6,177 L-27,174 L-39,170 L-50,164 L-59,155 L-66,141 L-68,132 L-68,112 L-64,99 L-57,88 L-49,81 L-35,74 L-20,70 L-1,68 L21,69 L31,71 L28,55 L24,49 L19,45 L10,42 L-20,42 L-38,45 L-47,47 L-52,15 L-52,8 L-36,4 L-15,1 Z M0,101 L-11,104 L-19,111 L-20,113 L-20,127 L-16,134 L-8,138 L3,140 L15,140 L30,139 L31,138 L31,103 L30,102 L23,101 Z " fill="#383839" transform="translate(1915,213)"/>
+          <path d="M0,0 L21,1 L39,5 L55,13 L65,23 L72,37 L75,48 L76,54 L76,169 L43,175 L19,177 L-6,177 L-27,174 L-42,169 L-51,163 L-57,158 L-64,147 L-68,134 L-69,118 L-67,106 L-63,96 L-56,87 L-48,80 L-35,74 L-21,70 L-2,68 L8,68 L27,70 L30,71 L29,59 L24,49 L17,44 L10,42 L-20,42 L-38,45 L-47,47 L-53,11 L-52,8 L-31,3 L-15,1 Z M0,101 L-9,103 L-17,108 L-21,116 L-21,125 L-17,133 L-9,138 L3,140 L15,140 L30,139 L30,102 L22,101 Z " fill="#383839" transform="translate(1035,213)"/>
+          <path d="M0,0 L21,1 L39,5 L55,13 L65,23 L72,36 L76,54 L76,169 L43,175 L19,177 L-6,177 L-27,174 L-42,169 L-51,163 L-57,158 L-64,147 L-68,134 L-69,119 L-67,106 L-63,96 L-56,87 L-48,80 L-35,74 L-20,70 L-2,68 L8,68 L27,70 L30,71 L29,59 L24,49 L17,44 L10,42 L-20,42 L-38,45 L-47,47 L-53,11 L-52,8 L-31,3 L-15,1 Z M0,101 L-9,103 L-18,109 L-21,116 L-21,125 L-17,133 L-9,138 L3,140 L15,140 L30,139 L30,102 L23,101 Z " fill="#383839" transform="translate(1400,213)"/>
+          <path d="M0,0 L26,0 L44,3 L57,8 L67,15 L72,20 L78,27 L84,40 L88,58 L89,69 L89,172 L41,172 L40,75 L38,60 L34,50 L28,45 L19,42 L2,42 L-9,43 L-9,172 L-57,172 L-57,10 L-48,7 L-21,2 Z " fill="#383839" transform="translate(1211,214)"/>
+          <path d="M0,0 L19,1 L40,6 L48,9 L47,18 L39,48 L23,44 L17,43 L-3,43 L-13,46 L-21,51 L-28,59 L-33,71 L-35,85 L-35,94 L-33,108 L-29,119 L-22,128 L-12,133 L-4,135 L22,135 L40,131 L45,130 L51,163 L51,169 L45,172 L29,176 L12,178 L-5,178 L-21,176 L-37,171 L-51,164 L-64,153 L-72,142 L-78,130 L-82,117 L-84,106 L-85,85 L-83,68 L-78,52 L-71,38 L-64,29 L-53,18 L-42,11 L-32,6 L-18,2 Z " fill="#DA1F43" transform="translate(1596,213)"/>
+          <path d="M0,0 L25,0 L30,5 L37,12 L46,23 L60,41 L73,59 L88,81 L89,0 L120,0 L120,141 L93,141 L81,120 L67,98 L53,78 L40,61 L32,51 L31,141 L0,141 L-1,140 L-1,1 Z " fill="#DA1F43" transform="translate(848,445)"/>
+          <path d="M0,0 L16,0 L31,3 L43,8 L52,14 L61,22 L70,36 L75,49 L77,58 L78,69 L78,78 L76,94 L71,109 L65,120 L54,132 L43,139 L31,144 L22,146 L13,147 L2,147 L-15,144 L-28,139 L-38,132 L-48,122 L-55,111 L-60,97 L-62,87 L-62,60 L-58,44 L-50,28 L-39,16 L-29,9 L-18,4 L-7,1 Z M3,28 L-6,30 L-16,36 L-23,45 L-28,57 L-29,62 L-29,85 L-25,98 L-19,108 L-10,115 L-2,118 L10,119 L20,117 L30,112 L37,104 L42,94 L44,86 L45,70 L43,56 L38,44 L30,35 L18,29 L13,28 Z " fill="#DA1F43" transform="translate(1169,442)"/>
+          <path d="M0,0 L94,0 L94,27 L31,27 L31,54 L87,54 L87,81 L31,81 L31,114 L99,114 L99,141 L-1,141 L-1,1 Z " fill="#DA1F43" transform="translate(1389,445)"/>
+          <path d="M0,0 L19,0 L34,3 L48,8 L50,9 L49,16 L42,35 L33,32 L23,29 L8,28 L-3,30 L-7,32 L-9,36 L-9,44 L-4,50 L6,55 L27,63 L42,71 L51,80 L55,88 L57,95 L57,114 L53,125 L47,133 L40,139 L28,144 L19,146 L9,147 L-6,147 L-26,144 L-40,139 L-45,136 L-42,125 L-37,111 L-32,112 L-18,117 L-12,118 L12,118 L21,114 L23,110 L23,100 L19,95 L3,87 L-18,79 L-28,73 L-33,69 L-40,59 L-43,48 L-43,36 L-39,23 L-32,14 L-25,8 L-14,3 Z " fill="#DA1F43" transform="translate(1308,442)"/>
+          <path d="M0,0 L18,0 L34,3 L47,8 L52,11 L44,34 L43,36 L38,35 L26,31 L11,29 L-2,30 L-14,35 L-17,38 L-19,38 L-21,42 L-27,53 L-29,62 L-29,84 L-26,96 L-21,105 L-19,109 L-15,111 L-5,116 L0,117 L22,117 L38,113 L45,111 L49,121 L54,136 L44,141 L30,145 L14,147 L0,147 L-14,145 L-27,141 L-38,135 L-47,127 L-54,117 L-59,106 L-63,89 L-64,71 L-62,54 L-57,39 L-51,28 L-40,16 L-30,9 L-19,4 L-8,1 Z " fill="#DA1F43" transform="translate(1567,442)"/>
+          <path d="M0,0 L7,6 L52,51 L60,65 L64,78 L64,98 L61,109 L54,123 L43,135 L-5,183 L-6,183 L-6,151 L-1,3 Z " fill="#DA1F43" transform="translate(634,318)"/>
+          <path d="M0,0 L93,0 L94,1 L94,27 L31,27 L31,56 L86,56 L87,57 L87,83 L31,83 L31,141 L-1,141 L-1,1 Z " fill="#DA1F43" transform="translate(1000,445)"/>
+          <path d="M0,0 L31,0 L32,1 L32,140 L31,141 L0,141 Z " fill="#DA1F43" transform="translate(785,445)"/>
+        </svg>
+        <div class="brand-divider"></div>
+        <span class="footer-tag">AI Evidence Collector</span>
+      </div>
+      <p class="footer-text">
+        AI Evidence Collector • Built for SOC 2 Type II, ISO 27001 & Enterprise Compliance Automation.
+      </p>
+      <p class="footer-text" style="margin-top: 0.5rem; font-size: 0.75rem; color: var(--text-dim);">
+        All evidence records are protected with SHA-256 cryptographic immutability.
+      </p>
+    </div>
+  </footer>
+
+  <!-- Interactive JavaScript -->
+  <script>
+    function copySnippet(btn, text) {
+      navigator.clipboard.writeText(text).then(() => {
+        const originalText = btn.innerText;
+        btn.innerText = 'Copied!';
+        btn.style.background = 'rgba(5, 150, 105, 0.4)';
+        btn.style.color = '#ffffff';
+        setTimeout(() => {
+          btn.innerText = originalText;
+          btn.style.background = '';
+          btn.style.color = '';
+        }, 2000);
+      });
+    }
+
+    // Scroll Spy for Header Links
+    const sections = document.querySelectorAll('section[id]');
+    const navLinks = document.querySelectorAll('.nav-links a');
+
+    window.addEventListener('scroll', () => {
+      let current = '';
+      const scrollPos = window.scrollY + 120;
+
+      sections.forEach(section => {
+        const sectionTop = section.offsetTop;
+        const sectionHeight = section.offsetHeight;
+        if (scrollPos >= sectionTop && scrollPos < sectionTop + sectionHeight) {
+          current = section.getAttribute('id');
+        }
+      });
+
+      navLinks.forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('href') === `#${current}`) {
+          link.classList.add('active');
+        }
+      });
+    });
+  </script>
+</body>
+</html>
