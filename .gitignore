@@ -1,0 +1,25 @@
+# Dependencies & Environment
+.venv/
+node_modules/
+dist/
+.env
+.env.*
+
+# Python caches
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Databases & local stores
+*.db
+*.sqlite3
+evidence_store/
+
+# Local agent & experiment cache
+.claude/
+.superpowers/
+rejected-logo-attempts/
+
+# OS files
+.DS_Store
+Thumbs.db
