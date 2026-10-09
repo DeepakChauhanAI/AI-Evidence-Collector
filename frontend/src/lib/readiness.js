@@ -36,6 +36,15 @@ export const STATUS_LABEL = {
   pending: "Not run", failed: "Failed", uncovered: "No collector",
 };
 
+// How strong a discovery suggestion is — words, not a percentage. The score is a
+// deterministic signal count, not a calibrated measurement, and a coloured "96%"
+// reads as verified. Shared so the Controls and Discovery views can't drift.
+export function matchStrength(score) {
+  if (score >= 0.6) return "Strong match";
+  if (score >= 0.35) return "Possible match";
+  return "Weak match";
+}
+
 // SOC 2 category from a control code like "CC6.1" -> "CC6". Non-CC codes group under their prefix.
 const CC_NAMES = {
   CC1: "Control Environment", CC2: "Communication & Information", CC3: "Risk Assessment",

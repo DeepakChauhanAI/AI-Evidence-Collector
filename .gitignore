@@ -15,6 +15,7 @@ __pycache__/
 *.db
 *.sqlite3
 evidence_store/
+.vision_cache/
 
 # Local agent & experiment cache
 .claude/

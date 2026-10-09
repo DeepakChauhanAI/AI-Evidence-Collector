@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, JSON
+from sqlalchemy import Column, Float, Integer, String, Text, DateTime, ForeignKey, JSON
 from sqlalchemy.orm import relationship
 from .db import Base
 
@@ -51,3 +51,22 @@ class Evidence(Base):
     collected_at = Column(DateTime, default=datetime.utcnow)
     meta = Column(JSON, default=dict)
     run = relationship("Run", back_populates="evidence")
+
+
+class DiscoveryCandidate(Base):
+    """A discovered asset proposed as evidence for a control — a *staging* row, not a
+    Binding. Keeping it separate means a scan never perturbs the run/schedule path;
+    confirming a candidate copies control_id/collector_type/config into a real Binding.
+    score + reason + signals are all deterministic and auditable (no LLM confidence)."""
+    __tablename__ = "discovery_candidates"
+    id = Column(Integer, primary_key=True)
+    control_id = Column(Integer, ForeignKey("controls.id"))
+    surface = Column(String)                   # documents | cloud | code | web
+    source_name = Column(String)               # human label: path, URL, or API descriptor
+    collector_type = Column(String)
+    config = Column(JSON, default=dict)
+    score = Column(Float, default=0.0)
+    reason = Column(Text, default="")
+    signals = Column(JSON, default=dict)       # matched_terms, ext, age_days, tier
+    status = Column(String, default="new")     # new | bound | dismissed
+    created_at = Column(DateTime, default=datetime.utcnow)

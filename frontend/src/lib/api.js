@@ -18,6 +18,9 @@ export async function api(path, opts = {}) {
 export const downloadUrl = (id) =>
   `/api/evidence/${id}/download${getToken() ? `?token=${encodeURIComponent(getToken())}` : ""}`;
 
+export const previewUrl = (id) =>
+  `/api/evidence/${id}/preview${getToken() ? `?token=${encodeURIComponent(getToken())}` : ""}`;
+
 export const exportUrl = (since) =>
   `/api/export?${since ? `since=${since}&` : ""}${getToken() ? `token=${encodeURIComponent(getToken())}` : ""}`;
 

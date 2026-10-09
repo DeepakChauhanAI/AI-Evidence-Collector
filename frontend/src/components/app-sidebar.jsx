@@ -4,6 +4,7 @@ import {
   FolderOpen,
   Pulse,
   PlugsConnected,
+  Crosshair,
   CaretLeft,
   CaretRight,
 } from "@phosphor-icons/react";
@@ -12,6 +13,7 @@ import { cn } from "@/lib/utils";
 export const NAV = [
   { key: "dashboard", label: "Dashboard", icon: Gauge },
   { key: "controls", label: "Controls", icon: ListChecks },
+  { key: "discovery", label: "Discovery", icon: Crosshair },
   { key: "evidence", label: "Evidence", icon: FolderOpen },
   { key: "activity", label: "Activity", icon: Pulse },
   { key: "sources", label: "Sources", icon: PlugsConnected },

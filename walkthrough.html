@@ -126,6 +126,12 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
+      /* wrap, not nowrap: below roughly 975px the brand plus seven section links no longer
+         fit one row, and the row used to push past the viewport and give the whole page a
+         horizontal scrollbar. Letting the links drop to a second line keeps every section
+         reachable instead of clipping the page. */
+      flex-wrap: wrap;
+      row-gap: 0.5rem;
     }
 
     .brand-group {
@@ -161,7 +167,13 @@
     .nav-links {
       display: flex;
       align-items: center;
-      gap: 1.5rem;
+      /* Seven links at the full 1.5rem gap need ~704px. On a narrow tablet that is wider
+         than the row, so the links wrap among themselves rather than pushing the page
+         sideways — cheaper than a breakpoint for every width where they stop fitting. */
+      flex-wrap: wrap;
+      justify-content: center;
+      column-gap: 1.5rem;
+      row-gap: 0.25rem;
     }
 
     .nav-links a {
@@ -169,6 +181,7 @@
       text-decoration: none;
       font-size: 0.875rem;
       font-weight: 600;
+      white-space: nowrap;   /* never let a section label break across lines */
       transition: color 0.2s ease;
       padding: 0.5rem 0.25rem;
       position: relative;
@@ -187,49 +200,6 @@
       height: 2.5px;
       background: linear-gradient(90deg, var(--emerald-primary), var(--cyan-primary));
       border-radius: 2px;
-    }
-
-    .nav-actions {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-    }
-
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      padding: 0.55rem 1.15rem;
-      font-size: 0.85rem;
-      font-weight: 600;
-      border-radius: 8px;
-      text-decoration: none;
-      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-      cursor: pointer;
-      border: 1px solid transparent;
-    }
-
-    .btn-primary {
-      background: linear-gradient(135deg, #059669 0%, #047857 100%);
-      color: #ffffff;
-      box-shadow: 0 2px 10px rgba(5, 150, 105, 0.25);
-    }
-
-    .btn-primary:hover {
-      box-shadow: 0 4px 16px rgba(5, 150, 105, 0.35);
-      transform: translateY(-1px);
-    }
-
-    .btn-outline {
-      background: #ffffff;
-      border-color: var(--border-strong);
-      color: var(--text-main);
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
-    }
-
-    .btn-outline:hover {
-      background: #f8fafc;
-      border-color: #94a3b8;
     }
 
     /* Container */
@@ -304,7 +274,9 @@
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: 1.25rem;
-      max-width: 960px;
+      /* 1080px, not 960px: at four cards the value and its pill were 17px too wide for a
+         960px track, so "100% Ready" and "SHA-256" broke across two lines mid-token. */
+      max-width: 1080px;
       margin: 0 auto 1.5rem;
     }
 
@@ -358,6 +330,9 @@
       display: flex;
       align-items: center;
       gap: 0.5rem;
+      /* If a value and its pill still don't fit, the pill drops to its own line. Without
+         this the *value* broke instead ("SHA-" / "256"), which reads as a typo. */
+      flex-wrap: wrap;
     }
 
     /* Section Styling */
@@ -416,6 +391,13 @@
       transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
+    /* Same min-width:auto trap as the grid cells above — the step card's mock panel
+       embeds a <pre>, whose intrinsic width was holding the whole card wider than the
+       screen on a 320px phone. */
+    .step-card > * {
+      min-width: 0;
+    }
+
     .step-card:hover {
       border-color: #cbd5e1;
       box-shadow: 0 8px 28px rgba(15, 23, 42, 0.08);
@@ -464,13 +446,19 @@
     .feature-bullets li {
       font-size: 0.88rem;
       color: var(--text-main);
-      display: flex;
-      align-items: center;
-      gap: 0.6rem;
       font-weight: 500;
+      /* Hanging indent, not a flex row: as a flex container each <li> split its own text
+         into separate flex items ("One-click" / the <em> / "batch trigger."), so a bullet
+         long enough to wrap on a phone rendered as three unrelated columns instead of
+         flowing sentences. */
+      position: relative;
+      padding-left: 1.4rem;
     }
 
     .bullet-check {
+      position: absolute;
+      left: 0;
+      top: 0;
       color: var(--emerald-primary);
       font-weight: bold;
     }
@@ -565,9 +553,23 @@
       gap: 1.75rem;
     }
 
+    /* Grid items default to min-width:auto, so a cell holding a <pre> (or a wide table)
+       refuses to shrink below the code's intrinsic width — the code block's own
+       overflow-x:auto never gets a chance to scroll. min-width:0 lets the cell shrink and
+       the <pre> scroll inside it. This is what pushed the Quickstart columns past the
+       viewport on a phone. */
+    .grid-2col > *,
+    .grid-4col > * {
+      min-width: 0;
+    }
+
     .grid-4col {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      /* auto-fit rather than a hard 4 columns: the fixed 4-up layout overflowed the
+         container between 1024px and ~1200px (four role cards need ~1100px inside a
+         1280px container once padding and gaps are counted). This collapses to 3, 2 or
+         1 column on its own, so no breakpoint has to guess the right width. */
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
       gap: 1.25rem;
     }
 
@@ -649,6 +651,8 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.5rem;
       background: var(--bg-surface-elevated);
       border-bottom: 1px solid var(--border-subtle);
     }
@@ -792,6 +796,15 @@
       font-size: 0.9rem;
     }
 
+    /* Badges inside a table cell may safely stay on one line: the cell lives in a
+       horizontally scrollable container, so a long badge widens the table instead of
+       overflowing the page. This is the case that must NOT be applied globally — a
+       global nowrap broke the step-card heading pill on narrow screens. */
+    .table-responsive td .pill,
+    .table-responsive th .pill {
+      white-space: nowrap;
+    }
+
     th {
       background: var(--bg-surface-elevated);
       padding: 1.1rem 1.5rem;
@@ -864,13 +877,33 @@
     }
 
     @media (max-width: 640px) {
+      .container { padding: 0 1.25rem; }
       .hero-title { font-size: 2.1rem; }
       .hero-meta-grid { grid-template-columns: 1fr; }
-      .step-card { grid-template-columns: 1fr; }
+      .step-card { grid-template-columns: 1fr; gap: 1.25rem; padding: 1.5rem; }
       .step-num-badge { margin-bottom: 1rem; }
+      /* Reset the "span 2" set at 1024px. In a one-column grid it forces an implicit
+         second column, so the card rendered as ~64px + ~233px and its text and mock
+         panel ran ~33px past the viewport, where body's overflow-x:hidden clipped them. */
+      .mock-preview { grid-column: auto; }
       .grid-2col { grid-template-columns: 1fr; }
       .grid-4col { grid-template-columns: 1fr; }
       .nav-links { display: none; }
+      .demo-track-body { padding: 1.25rem; }
+      /* Tables are width:100%, so on a phone they squeezed into four cramped columns and
+         every badge wrapped to three lines. Give them a floor and let .table-responsive
+         do the horizontal scrolling it was already set up for. */
+      .table-responsive table { min-width: 620px; }
+    }
+
+    /* Smallest phones (iPhone SE 1st gen, folded Galaxy): the brand lockup is 297px wide
+       on its own, so the wordmark goes and the logo mark stays. */
+    @media (max-width: 400px) {
+      .brand-sub,
+      .brand-divider { display: none; }
+      .container { padding: 0 1rem; }
+      .step-card { padding: 1.25rem; }
+      .demo-track-header { padding: 1rem 1.25rem; }
     }
   </style>
 </head>
@@ -911,16 +944,12 @@
       <nav class="nav-links">
         <a href="#overview" class="active">Overview</a>
         <a href="#demo-steps">Walkthrough</a>
+        <a href="#discovery">Discovery</a>
         <a href="#ai-agent">AI Agent</a>
         <a href="#demo-script">Demo Script</a>
         <a href="#collectors">Collectors</a>
         <a href="#quickstart">Quickstart</a>
       </nav>
-
-      <div class="nav-actions">
-        <a href="http://localhost:5173" target="_blank" class="btn btn-outline">Open Live App</a>
-        <a href="#quickstart" class="btn btn-primary">Start Demo Server</a>
-      </div>
     </div>
   </header>
 
@@ -940,7 +969,9 @@
         <span class="gradient-text">Compliance Evidence Collection</span>
       </h1>
       <p class="hero-desc">
-        Eliminate audit panic. Automatically harvest tamper-proof evidence across AWS, Cloud APIs, Documents, and Web Consoles — graded in real time by an AI SOC 2 auditor.
+        Eliminate audit panic. The discovery engine finds the evidence — across your document
+        folder, S3, AWS and GitHub configuration, and your trust centre — then collects it as
+        tamper-proof artifacts graded in real time by an AI SOC 2 auditor.
       </p>
 
       <!-- Key Metrics / Meta Strip -->
@@ -950,29 +981,29 @@
           <div class="meta-val" style="color: var(--emerald-primary);">100% Ready <span class="pill pill-green">Passing</span></div>
         </div>
         <div class="meta-card">
+          <div class="meta-label">Discovery Surfaces</div>
+          <div class="meta-val">4 Scanned <span class="pill pill-violet">No URLs</span></div>
+        </div>
+        <div class="meta-card">
           <div class="meta-label">Supported Collectors</div>
-          <div class="meta-val">4 Active <span class="pill pill-cyan">Plug & Play</span></div>
+          <div class="meta-val">8 Active <span class="pill pill-cyan">Plug & Play</span></div>
         </div>
         <div class="meta-card">
           <div class="meta-label">Evidence Verification</div>
-          <div class="meta-val">SHA-256 <span class="pill pill-violet">Immutable</span></div>
-        </div>
-        <div class="meta-card">
-          <div class="meta-label">AI Agent Architecture</div>
-          <div class="meta-val">Zero-Blocking <span class="pill pill-amber">Self-Healing</span></div>
+          <div class="meta-val">SHA-256 <span class="pill pill-amber">Immutable</span></div>
         </div>
       </div>
     </section>
 
     <!-- ========================================== -->
-    <!-- SECTION 2: 5-STEP WALKTHROUGH              -->
+    <!-- SECTION 2: WALKTHROUGH                     -->
     <!-- ========================================== -->
     <section id="demo-steps">
       <div class="section-header">
         <span class="section-tag">Step-by-Step Operational Flow</span>
         <h2 class="section-title">The Complete Evidence Collection Lifecycle</h2>
         <p class="section-subtitle">
-          How Panacea InfoSec moves an organization from vague compliance frameworks to an immutable, auditor-ready evidence package in five minutes.
+          How Panacea InfoSec moves an organization from vague compliance frameworks to an immutable, auditor-ready evidence package — without anyone pasting a single URL.
         </p>
       </div>
 
@@ -1032,8 +1063,9 @@ Last Auto-Scan: <span style="color:#cbd5e1;">Just now via Background Daemon</spa
             </p>
             <ul class="feature-bullets">
               <li><span class="bullet-check">✓</span> Standardized schema: Control Code (CC6.1), Title, Description, and Framework.</li>
-              <li><span class="bullet-check">✓</span> <strong>Hybrid Seam:</strong> Instantly suggests whether to use an AWS call, HTTP API, or Playwright screenshot.</li>
-              <li><span class="bullet-check">✓</span> Filter by Framework (SOC 2, ISO 27001, HIPAA) and status.</li>
+              <li><span class="bullet-check">✓</span> <strong>Hybrid Seam:</strong> Instantly suggests whether to use an AWS call, HTTP API, or Playwright screenshot — deterministically when AI is off, semantically when it is on.</li>
+              <li><span class="bullet-check">✓</span> Status filters: All, Gaps, Stale, Satisfied, and Uncovered.</li>
+              <li><span class="bullet-check">✓</span> Ships with a built-in SOC 2 starter checklist (20 controls) for zero-setup demos.</li>
             </ul>
           </div>
           <div class="mock-preview">
@@ -1046,7 +1078,7 @@ Last Auto-Scan: <span style="color:#cbd5e1;">Just now via Background Daemon</spa
               <div class="mock-title">checklist.import_csv // GRC Parser</div>
             </div>
             <div class="mock-body">
-<span style="color:#10b981;">[SUCCESS]</span> Imported 14 Controls from SOC2_Master.csv
+<span style="color:#10b981;">[SUCCESS]</span> Imported 20 Controls from SOC2_Master.csv
 
 <span style="color:#38bdf8;">CC6.1 - Logical Access Controls</span>
  ↳ Suggestion: <span class="pill pill-cyan">aws</span> (IAM Password Policy)
@@ -1060,9 +1092,53 @@ Last Auto-Scan: <span style="color:#cbd5e1;">Just now via Background Daemon</spa
           </div>
         </div>
 
-        <!-- STEP 3 -->
+        <!-- STEP 3: DISCOVERY -->
         <div class="step-card">
           <div class="step-num-badge">03</div>
+          <div class="step-info">
+            <h3>
+              Autonomous Evidence Discovery
+              <span class="pill pill-violet">Zero URL Entry</span>
+            </h3>
+            <p>
+              Press <strong>Run discovery</strong> and the engine scans every configured surface, then proposes
+              which artifact answers which control — <strong>and names the signals that matched</strong>, so the
+              suggestion can be checked rather than trusted.
+            </p>
+            <ul class="feature-bullets">
+              <li><span class="bullet-check">✓</span> Four surfaces: local folder + S3, AWS &amp; GitHub configuration, and the trust centre / wiki.</li>
+              <li><span class="bullet-check">✓</span> Deterministic matching — no AI confidence percentage, and every match cites its evidence.</li>
+              <li><span class="bullet-check">✓</span> <strong>Nothing is collected on a suggestion.</strong> Binding maps a collector; running it stays a separate, explicit action.</li>
+            </ul>
+          </div>
+          <div class="mock-preview">
+            <div class="mock-header">
+              <div class="mock-dots">
+                <div class="mock-dot dot-red"></div>
+                <div class="mock-dot dot-amber"></div>
+                <div class="mock-dot dot-green"></div>
+              </div>
+              <div class="mock-title">POST /api/discovery/scan // Candidates</div>
+            </div>
+            <div class="mock-body">
+<span style="color:#64748b;">// Last scan: 4 documents + 19 descriptors → 45 suggestions</span>
+
+<span style="color:#38bdf8;">CC6.6 Multi-factor authentication</span>
+ ↳ <span style="color:#10b981;">AWS IAM users and MFA enrolment</span>  Strong · cloud
+   <span style="color:#64748b;">matched evidence signals: access, mfa, factor</span>
+ ↳ <span style="color:#10b981;">GitHub org two-factor requirement</span>  Strong · code
+ ↳ <span style="color:#64748b;">Access_Control_Policy_2026.md</span>  Strong · documents
+
+<span style="color:#38bdf8;">CC7.5 Backup and recovery</span>
+ ↳ <span style="color:#10b981;">AWS RDS instance configuration</span>  <span class="pill pill-green">Bind</span>
+   <span style="color:#64748b;">matched evidence signals: backup, configuration</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 4 -->
+        <div class="step-card">
+          <div class="step-num-badge">04</div>
           <div class="step-info">
             <h3>
               AI-Assisted Collector Binding
@@ -1100,9 +1176,9 @@ Last Auto-Scan: <span style="color:#cbd5e1;">Just now via Background Daemon</spa
           </div>
         </div>
 
-        <!-- STEP 4 -->
+        <!-- STEP 5 -->
         <div class="step-card">
-          <div class="step-num-badge">04</div>
+          <div class="step-num-badge">05</div>
           <div class="step-info">
             <h3>
               Deterministic Execution & Proof Hashing
@@ -1139,9 +1215,9 @@ Status: <span style="color:#10b981;">VERIFIED_IMMUTABLE</span>
           </div>
         </div>
 
-        <!-- STEP 5 -->
+        <!-- STEP 6 -->
         <div class="step-card">
-          <div class="step-num-badge">05</div>
+          <div class="step-num-badge">06</div>
           <div class="step-info">
             <h3>
               The AI Auditor Assessment
@@ -1180,14 +1256,220 @@ Status: <span style="color:#10b981;">VERIFIED_IMMUTABLE</span>
     </section>
 
     <!-- ========================================== -->
-    <!-- SECTION 3: AI AGENT ROLES & ARCHITECTURE   -->
+    <!-- SECTION 3: AUTONOMOUS DISCOVERY            -->
+    <!-- ========================================== -->
+    <section id="discovery">
+      <div class="section-header">
+        <span class="section-tag">Zero Manual Evidence Hunting</span>
+        <h2 class="section-title">Autonomous Multi-Surface Discovery</h2>
+        <p class="section-subtitle">
+          The hardest part of compliance was never collecting evidence — it was working out
+          <em>which</em> file or API actually proves each control. The discovery engine does that step,
+          so the operator confirms suggestions instead of typing URLs.
+        </p>
+      </div>
+
+      <!-- The Four Surfaces -->
+      <div class="grid-4col" style="margin-bottom: 2.5rem;">
+        <div class="meta-card" style="padding: 1.5rem;">
+          <div class="meta-label" style="margin-bottom: 0.5rem;">Surface A</div>
+          <h4 style="margin: 0 0 0.5rem; color: #0f172a; font-size: 1.05rem; font-weight: 800;">Documents &amp; S3</h4>
+          <p style="font-size: 0.85rem; color: var(--text-muted);">
+            Walks a local compliance folder and lists an S3 bucket. Reads text from
+            <code>.md/.txt/.csv</code>, <code>.docx</code> (stdlib) and <code>.pdf</code>.
+          </p>
+          <div class="role-code" style="margin-top: 0.75rem;">Collector: local_file / s3_file</div>
+        </div>
+
+        <div class="meta-card" style="padding: 1.5rem;">
+          <div class="meta-label" style="margin-bottom: 0.5rem;">Surface B</div>
+          <h4 style="margin: 0 0 0.5rem; color: #0f172a; font-size: 1.05rem; font-weight: 800;">Cloud — AWS</h4>
+          <p style="font-size: 0.85rem; color: var(--text-muted);">
+            A catalogue of 19 read-only checks — IAM password policy, MFA, CloudTrail,
+            KMS, GuardDuty, CloudWatch alarms, RDS backups, ELB, Route 53.
+          </p>
+          <div class="role-code" style="margin-top: 0.75rem;">Collector: aws / github</div>
+        </div>
+
+        <div class="meta-card" style="padding: 1.5rem;">
+          <div class="meta-label" style="margin-bottom: 0.5rem;">Surface C</div>
+          <h4 style="margin: 0 0 0.5rem; color: #0f172a; font-size: 1.05rem; font-weight: 800;">Web &amp; Wiki</h4>
+          <p style="font-size: 0.85rem; color: var(--text-muted);">
+            Crawls a trust centre's <code>sitemap.xml</code> or its own links, keeping
+            same-host compliance pages (<code>/security</code>, <code>/subprocessors</code>).
+          </p>
+          <div class="role-code" style="margin-top: 0.75rem;">Collector: document / screenshot</div>
+        </div>
+
+        <div class="meta-card" style="padding: 1.5rem;">
+          <div class="meta-label" style="margin-bottom: 0.5rem;">Surface D</div>
+          <h4 style="margin: 0 0 0.5rem; color: #0f172a; font-size: 1.05rem; font-weight: 800;">Scanned PDFs</h4>
+          <p style="font-size: 0.85rem; color: var(--text-muted);">
+            Documents with no text layer — signed acknowledgements, photographed policies —
+            are rendered and read by a vision model. <strong>Opt-in only.</strong>
+          </p>
+          <div class="role-code" style="margin-top: 0.75rem;">Opt-in: DISCOVERY_VISION_OCR</div>
+        </div>
+      </div>
+
+      <!-- How matching works -->
+      <div class="grid-2col" style="margin-bottom: 2.5rem;">
+        <div class="meta-card" style="padding: 1.75rem;">
+          <h3 style="color: #0f172a; font-size: 1.25rem; font-weight: 800; margin-bottom: 0.75rem;">How a match is decided</h3>
+          <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">
+            The control's wording is expanded through a compliance thesaurus
+            (<em>access</em> → iam, password, credential), then matched against each asset's
+            name, path and extracted text. The score is the fraction of concepts satisfied.
+          </p>
+          <div class="code-block-wrapper">
+            <pre class="code-block">score = concepts_hit / concepts_in_control
+
+reason = "matched evidence signals: access, mfa, factor"
+signals = { matched_terms, surface, ext, age_days, tier }</pre>
+          </div>
+          <p style="font-size: 0.85rem; color: var(--emerald-primary); font-weight: 600; margin-top: 1rem;">
+            ✦ No AI confidence percentage. An LLM's self-reported "96%" is not calibrated, and a green
+            badge the auditor stops questioning is worse than no badge.
+          </p>
+        </div>
+
+        <div class="meta-card" style="padding: 1.75rem;">
+          <h3 style="color: #0f172a; font-size: 1.25rem; font-weight: 800; margin-bottom: 0.75rem;">What a suggestion does — and doesn't do</h3>
+          <ul class="feature-bullets" style="margin: 0;">
+            <li><span class="bullet-check">✓</span> <strong>Suggest</strong> — a candidate is a staging row, never a live binding.</li>
+            <li><span class="bullet-check">✓</span> <strong>Confirm</strong> — "Bind" creates an ordinary collector mapping, identical to typing one by hand.</li>
+            <li><span class="bullet-check">✓</span> <strong>Run</strong> — collection is always a separate, explicit action. Discovery never auto-schedules.</li>
+            <li><span class="bullet-check">✓</span> <strong>Explain</strong> — every candidate records its surface, its matched signals, and the asset it came from.</li>
+            <li><span class="bullet-check">✓</span> <strong>Degrade</strong> — with no AWS or GitHub credentials the connected check still runs, but stores a clearly-labelled <em>Sample</em> rather than pretending to be real evidence.</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Measured accuracy -->
+      <h3 style="font-size: 1.45rem; font-weight: 800; margin-bottom: 0.5rem; color: #0f172a;">Measured, Not Asserted</h3>
+      <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.25rem; max-width: 70ch;">
+        <code>python -m app.eval_discovery</code> writes a review sheet of every suggestion for hand-labelling,
+        then reports the split. This is what decided <em>against</em> putting an LLM in the matching path.
+      </p>
+      <div class="table-responsive" style="margin-bottom: 2.5rem;">
+        <table>
+          <thead>
+            <tr>
+              <th>SOC 2 Starter Checklist (20 controls)</th>
+              <th>Result</th>
+              <th>What it means</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Controls receiving a suggestion</strong></td>
+              <td><span class="pill pill-green">18 / 20 · 90%</span></td>
+              <td>The two misses need documents no API can evidence (board minutes, code-of-conduct acknowledgements).</td>
+            </tr>
+            <tr>
+              <td><strong>Top-1 suggestion correct</strong></td>
+              <td><span class="pill pill-green">15 / 20 · 75%</span></td>
+              <td>Judged as an auditor would: is this <em>reasonable</em> evidence for this control?</td>
+            </tr>
+            <tr>
+              <td><strong>A correct answer within top-3</strong></td>
+              <td><span class="pill pill-green">16 / 20 · 80%</span></td>
+              <td>The shortlist usually contains the right answer even when it isn't first.</td>
+            </tr>
+            <tr>
+              <td><strong>Failures that are <em>ranking</em> errors</strong></td>
+              <td><span class="pill pill-amber">1 / 20</span></td>
+              <td>The right answer was in the list, just ordered wrong. An LLM rerank could fix this — and only this.</td>
+            </tr>
+            <tr>
+              <td><strong>Failures that are <em>recall</em> errors</strong></td>
+              <td><span class="pill pill-violet">4 / 20</span></td>
+              <td>Nothing correct was found at all. Reordering cannot help; wider coverage can.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 2.5rem; max-width: 75ch;">
+        <strong>Why this matters:</strong> a smarter matcher was projected to lift quality, but the measurement showed
+        only <strong>1 of 20</strong> failures was a matching problem — adding six AWS descriptors fixed <strong>3</strong>.
+        The bottleneck is discovery <em>coverage</em>, not match <em>judgement</em>. Labels are the reviewer's
+        judgement, not an auditor's; the ranking-vs-recall split is robust to that.
+      </p>
+
+      <!-- Deterministic vs AI -->
+      <h3 style="font-size: 1.45rem; font-weight: 800; margin-bottom: 0.5rem; color: #0f172a;">Who Does What: Engine vs Agent</h3>
+      <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.25rem; max-width: 70ch;">
+        Discovery is deliberately <strong>not</strong> driven by the LLM. Finding and matching must be reproducible —
+        the same folder and checklist must produce the same suggestions on a re-run, or the audit trail is worthless.
+      </p>
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>Step</th>
+              <th>Handled by</th>
+              <th>Uses AI?</th>
+              <th>Why</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Walking folders, listing buckets, crawling a wiki</td>
+              <td><code>discovery/document_scanner.py</code>, <code>web_crawler.py</code></td>
+              <td><span class="pill pill-green">No</span></td>
+              <td>File and HTTP operations — an LLM adds nothing.</td>
+            </tr>
+            <tr>
+              <td>Deciding which asset matches which control</td>
+              <td><code>discovery/matchmaker.py</code></td>
+              <td><span class="pill pill-green">No</span></td>
+              <td>Reproducible, auditable, and free. Measured at only 1 ranking error in 20.</td>
+            </tr>
+            <tr>
+              <td>Reading a scanned page with no text layer</td>
+              <td><code>discovery/ocr.py</code> + vision model</td>
+              <td><span class="pill pill-amber">Yes (opt-in)</span></td>
+              <td>The only way to read a scan — no parser can.</td>
+            </tr>
+            <tr>
+              <td>Choosing a collector type and drafting its config</td>
+              <td><code>checklist.suggest_collector()</code>, <code>agent.draft_config()</code></td>
+              <td><span class="pill pill-cyan">Yes</span></td>
+              <td>Semantic judgement over control intent.</td>
+            </tr>
+            <tr>
+              <td>Grading collected evidence against the control</td>
+              <td><code>agent.assess_evidence()</code></td>
+              <td><span class="pill pill-cyan">Yes</span></td>
+              <td>Reading prose and reporting gaps is genuinely a language task.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Egress callout -->
+      <div class="meta-card" style="padding: 1.75rem; margin-top: 2.5rem; border-left: 4px solid var(--amber-accent);">
+        <h3 style="color: #0f172a; font-size: 1.15rem; font-weight: 800; margin-bottom: 0.5rem;">⚠️ Vision OCR is off by default — deliberately</h3>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0;">
+          Enabling <code>DISCOVERY_VISION_OCR=true</code> sends <strong>page images of your documents to the configured
+          LLM endpoint</strong>. That is the only place in discovery where document contents leave the machine, so it
+          never turns itself on. Everything else — folder, S3, the AWS/GitHub catalogues, the web crawl, and PDF/DOCX
+          text extraction — stays local and deterministic. Results are cached by file hash, so re-scanning does not
+          re-send pages.
+        </p>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- SECTION 4: AI AGENT ROLES & ARCHITECTURE   -->
     <!-- ========================================== -->
     <section id="ai-agent">
       <div class="section-header">
         <span class="section-tag">Internal Intelligence Core</span>
         <h2 class="section-title">The Four Roles of the AI Agent</h2>
         <p class="section-subtitle">
-          All AI reasoning is isolated in <code>agent.py</code> and <code>checklist.py</code>. The application pairs high-level intelligence with deterministic safeguards.
+          All AI reasoning is isolated in <code>agent.py</code> and <code>checklist.py</code> — the discovery engine
+          itself is deterministic and reproducible. The application pairs high-level intelligence with deterministic safeguards.
         </p>
       </div>
 
@@ -1284,12 +1566,12 @@ Status: <span style="color:#10b981;">VERIFIED_IMMUTABLE</span>
     </section>
 
     <!-- ========================================== -->
-    <!-- SECTION 4: STAKEHOLDER DEMO TALK-TRACK     -->
+    <!-- SECTION 5: STAKEHOLDER DEMO TALK-TRACK     -->
     <!-- ========================================== -->
     <section id="demo-script">
       <div class="section-header">
         <span class="section-tag">Presenter Playbook</span>
-        <h2 class="section-title">5-Minute Live Stakeholder Demo Guide</h2>
+        <h2 class="section-title">6-Minute Live Stakeholder Demo Guide</h2>
         <p class="section-subtitle">
           A turnkey talk-track with exact spoken scripts and UI click sequences designed to showcase the platform to executives, CISOs, or compliance auditors.
         </p>
@@ -1299,7 +1581,7 @@ Status: <span style="color:#10b981;">VERIFIED_IMMUTABLE</span>
       <div class="demo-track-block">
         <div class="demo-track-header">
           <div class="track-meta">
-            <span class="track-time">00:00 - 01:15</span>
+            <span class="track-time">00:00 - 01:00</span>
             <span class="track-title">Phase 1: The Audit Readiness Dashboard</span>
           </div>
           <span class="pill pill-green">The Hook</span>
@@ -1327,10 +1609,10 @@ Status: <span style="color:#10b981;">VERIFIED_IMMUTABLE</span>
       <div class="demo-track-block">
         <div class="demo-track-header">
           <div class="track-meta">
-            <span class="track-time">01:15 - 02:45</span>
+            <span class="track-time">01:00 - 02:00</span>
             <span class="track-title">Phase 2: Controls Checklist & AI Suggestions</span>
           </div>
-          <span class="pill pill-cyan">The Magic</span>
+          <span class="pill pill-cyan">The Framework</span>
         </div>
         <div class="demo-track-body">
           <div class="talk-box">
@@ -1351,12 +1633,47 @@ Status: <span style="color:#10b981;">VERIFIED_IMMUTABLE</span>
         </div>
       </div>
 
-      <!-- Phase 3 -->
+      <!-- Phase 3: DISCOVERY -->
       <div class="demo-track-block">
         <div class="demo-track-header">
           <div class="track-meta">
-            <span class="track-time">02:45 - 04:00</span>
-            <span class="track-title">Phase 3: Execution, Immutability & The AI Auditor</span>
+            <span class="track-time">02:00 - 03:30</span>
+            <span class="track-title">Phase 3: Autonomous Discovery — Zero URLs Typed</span>
+          </div>
+          <span class="pill pill-violet">The Magic</span>
+        </div>
+        <div class="demo-track-body">
+          <div class="talk-box">
+            <h5>🎙️ What to Say (Presenter Script)</h5>
+            <p class="quote-text">
+              "This is the part every other tool makes you do by hand. Historically, someone had to work out which
+              file or API proved each of these 20 controls, then type it in — that's days of work. Instead, I press
+              <em>Run discovery</em>. It scans our document folder, our AWS configuration, our GitHub org, and our
+              public trust centre. And look at how it answers: not with a vague confidence score, but with the actual
+              evidence — 'this matched on access, mfa, factor.' You can check its reasoning. It's deterministic, so
+              the same folder gives the same answer every time — which is exactly what an auditor needs. I click Bind
+              and that's a collector mapping. Nothing has been collected yet; running it is still my call."
+            </p>
+          </div>
+          <div class="action-box">
+            <h5>🖱️ What to Do in the UI</h5>
+            <ul class="action-list">
+              <li>1. Click <strong>Discovery</strong> in the sidebar — point out the four surface cards (Documents, Cloud, Code, Web).</li>
+              <li>2. Press <strong>Run discovery</strong> and let the toast report the scan: e.g. <em>"4 documents + 19 descriptors → 45 suggestions."</em></li>
+              <li>3. Scroll to a control card and read the <strong>matched evidence signals</strong> aloud — this is the credibility moment.</li>
+              <li>4. Click <strong>Bind</strong> on a strong match, then switch to <strong>Controls</strong> to show the mapping now exists there.</li>
+              <li>5. If asked "is this AI?" — answer from the <strong>Who Does What</strong> table: discovery is deterministic; the AI handles collector choice, config drafting, and evidence grading.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Phase 4 -->
+      <div class="demo-track-block">
+        <div class="demo-track-header">
+          <div class="track-meta">
+            <span class="track-time">03:30 - 04:45</span>
+            <span class="track-title">Phase 4: Execution, Immutability & The AI Auditor</span>
           </div>
           <span class="pill pill-amber">The Proof</span>
         </div>
@@ -1379,14 +1696,14 @@ Status: <span style="color:#10b981;">VERIFIED_IMMUTABLE</span>
         </div>
       </div>
 
-      <!-- Phase 4 -->
+      <!-- Phase 5 -->
       <div class="demo-track-block">
         <div class="demo-track-header">
           <div class="track-meta">
-            <span class="track-time">04:00 - 05:00</span>
-            <span class="track-title">Phase 4: Evidence Library & Audit Hand-Off</span>
+            <span class="track-time">04:45 - 06:00</span>
+            <span class="track-title">Phase 5: Evidence Library & Audit Hand-Off</span>
           </div>
-          <span class="pill pill-violet">The Close</span>
+          <span class="pill pill-green">The Close</span>
         </div>
         <div class="demo-track-body">
           <div class="talk-box">
@@ -1408,14 +1725,15 @@ Status: <span style="color:#10b981;">VERIFIED_IMMUTABLE</span>
     </section>
 
     <!-- ========================================== -->
-    <!-- SECTION 5: DETERMINISTIC COLLECTORS        -->
+    <!-- SECTION 6: DETERMINISTIC COLLECTORS        -->
     <!-- ========================================== -->
     <section id="collectors">
       <div class="section-header">
         <span class="section-tag">Plug & Play Data Ingestion</span>
-        <h2 class="section-title">The Four Deterministic Evidence Collectors</h2>
+        <h2 class="section-title">The Evidence Collectors</h2>
         <p class="section-subtitle">
           All evidence collection is deterministic, auditable, and immutable. No unpredictable scraping or hallucinations.
+          The discovery engine suggests which of these answers a control; the collector itself only ever fetches.
         </p>
       </div>
 
@@ -1427,7 +1745,8 @@ Status: <span style="color:#10b981;">VERIFIED_IMMUTABLE</span>
             <span class="pill pill-cyan">Boto3 SDK</span>
           </div>
           <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">
-            Direct read-only describe/list/get calls against AWS IAM, CloudTrail, S3, KMS, and GuardDuty.
+            Direct read-only describe/list/get calls against AWS IAM, CloudTrail, S3, KMS, GuardDuty,
+            CloudWatch, Auto Scaling, Backup, RDS, ELB and Route 53.
           </p>
           <div class="code-block-wrapper">
             <pre class="code-block">
@@ -1506,18 +1825,105 @@ Status: <span style="color:#10b981;">VERIFIED_IMMUTABLE</span>
             ✦ Lazy Loading: Imports Playwright only when called so server starts in milliseconds.
           </p>
         </div>
+
+        <!-- GitHub Collector -->
+        <div class="meta-card" style="padding: 1.75rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h3 style="color: #0f172a; font-size: 1.25rem; font-weight: 800;">GitHub Collector (<code>github</code>)</h3>
+            <span class="pill pill-green">REST API</span>
+          </div>
+          <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">
+            Read-only repo and org governance: branch protection, required reviews, Actions workflows,
+            secret-scanning and Dependabot alerts.
+          </p>
+          <div class="code-block-wrapper">
+            <pre class="code-block">
+{
+  "endpoint": "repos/{owner}/{repo}/branches/{branch}/protection"
+}</pre>
+          </div>
+          <p style="font-size: 0.82rem; color: var(--emerald-primary); font-weight: 600;">
+            ✦ <code>{owner}</code>/<code>{repo}</code>/<code>{branch}</code> fill from env vars; without a
+            <code>GITHUB_TOKEN</code> it stores a labelled sample instead of calling out.
+          </p>
+        </div>
+
+        <!-- Local File Collector -->
+        <div class="meta-card" style="padding: 1.75rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h3 style="color: #0f172a; font-size: 1.25rem; font-weight: 800;">Local File Collector (<code>local_file</code>)</h3>
+            <span class="pill pill-cyan">On-Premise</span>
+          </div>
+          <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">
+            Reads a document the discovery engine found on this machine — for evidence that never leaves
+            the internal network.
+          </p>
+          <div class="code-block-wrapper">
+            <pre class="code-block">
+{
+  "path": "./compliance_docs/Access_Control_Policy_2026.md"
+}</pre>
+          </div>
+          <p style="font-size: 0.82rem; color: var(--cyan-primary); font-weight: 600;">
+            ✦ Path-Guarded: refuses any path outside <code>DISCOVERY_DOCS_DIR</code>, so a bound candidate
+            cannot be repointed at an arbitrary file.
+          </p>
+        </div>
+
+        <!-- S3 File Collector -->
+        <div class="meta-card" style="padding: 1.75rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h3 style="color: #0f172a; font-size: 1.25rem; font-weight: 800;">S3 Object Collector (<code>s3_file</code>)</h3>
+            <span class="pill pill-violet">Binary Safe</span>
+          </div>
+          <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">
+            Fetches a single object from a compliance bucket. Kept separate from the AWS collector
+            because it returns bytes, not JSON.
+          </p>
+          <div class="code-block-wrapper">
+            <pre class="code-block">
+{
+  "bucket": "acme-compliance",
+  "key": "policies/Info_Sec_Policy_v4.pdf"
+}</pre>
+          </div>
+          <p style="font-size: 0.82rem; color: var(--violet-accent); font-weight: 600;">
+            ✦ Preserves the object byte-for-byte and records its <code>ETag</code> alongside the SHA-256 digest.
+          </p>
+        </div>
+
+        <!-- Agent Collector -->
+        <div class="meta-card" style="padding: 1.75rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h3 style="color: #0f172a; font-size: 1.25rem; font-weight: 800;">Agent Collector (<code>agent</code>)</h3>
+            <span class="pill pill-amber">Delegating</span>
+          </div>
+          <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">
+            Given a natural-language goal, plans which real collector to use and with what config,
+            then delegates to it.
+          </p>
+          <div class="code-block-wrapper">
+            <pre class="code-block">
+{
+  "goal": "collect the IAM password policy for CC6.1"
+}</pre>
+          </div>
+          <p style="font-size: 0.82rem; color: var(--amber-accent); font-weight: 600;">
+            ✦ Auditable Plan: the chosen collector and config are stamped into the artifact's metadata.
+          </p>
+        </div>
       </div>
     </section>
 
     <!-- ========================================== -->
-    <!-- SECTION 6: CLI & QUICKSTART                -->
+    <!-- SECTION 7: CLI & QUICKSTART                -->
     <!-- ========================================== -->
     <section id="quickstart">
       <div class="section-header">
         <span class="section-tag">Developer & DevOps Guide</span>
         <h2 class="section-title">Starting the Stack & Verification CLI</h2>
         <p class="section-subtitle">
-          Commands to run the FastAPI backend, the React + Tailwind frontend, and test autonomous collector jobs.
+          Commands to run the FastAPI backend, the React + Tailwind frontend, and the end-to-end self-check.
         </p>
       </div>
 
@@ -1526,25 +1932,35 @@ Status: <span style="color:#10b981;">VERIFIED_IMMUTABLE</span>
         <div>
           <h4 style="color: #0f172a; font-size: 1.1rem; font-weight: 800; margin-bottom: 0.5rem;">1. Start FastAPI Backend (Port 8000)</h4>
           <div class="code-block-wrapper">
-            <button class="copy-btn" onclick="copySnippet(this, 'cd backend\nvenv\\Scripts\\activate\nuvicorn app.main:app --reload --port 8000')">Copy</button>
+            <button class="copy-btn" onclick="copySnippet(this, 'cd backend\n.venv\\Scripts\\activate\npip install -r requirements.txt\nuvicorn app.main:app --reload --port 8000')">Copy</button>
             <pre class="code-block">cd backend
-venv\Scripts\activate
+.venv\Scripts\activate
+pip install -r requirements.txt
 uvicorn app.main:app --reload --port 8000</pre>
           </div>
 
           <h4 style="color: #0f172a; font-size: 1.1rem; font-weight: 800; margin-top: 1.5rem; margin-bottom: 0.5rem;">2. Start Vite + React Frontend (Port 5173)</h4>
           <div class="code-block-wrapper">
-            <button class="copy-btn" onclick="copySnippet(this, 'cd frontend\nnpm run dev')">Copy</button>
+            <button class="copy-btn" onclick="copySnippet(this, 'cd frontend\nnpm install\nnpm run dev')">Copy</button>
             <pre class="code-block">cd frontend
+npm install
 npm run dev</pre>
+          </div>
+
+          <h4 style="color: #0f172a; font-size: 1.1rem; font-weight: 800; margin-top: 1.5rem; margin-bottom: 0.5rem;">3. Or Both At Once</h4>
+          <div class="code-block-wrapper">
+            <button class="copy-btn" onclick="copySnippet(this, 'start.bat')">Copy</button>
+            <pre class="code-block">start.bat</pre>
           </div>
         </div>
 
         <!-- Self Check & Verification -->
         <div>
-          <h4 style="color: #0f172a; font-size: 1.1rem; font-weight: 800; margin-bottom: 0.5rem;">3. Run System Self-Check Diagnostic</h4>
+          <h4 style="color: #0f172a; font-size: 1.1rem; font-weight: 800; margin-bottom: 0.5rem;">4. Run System Self-Check Diagnostic</h4>
           <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem;">
-            Tests collectors, hashing algorithms, and AI agent endpoints end-to-end:
+            Offline end-to-end test of every path — checklist import, collector binding, run, hashing,
+            AI agent roles, all four discovery surfaces, PDF/DOCX extraction, vision OCR gating, secret
+            resolution, integrity verification and export:
           </p>
           <div class="code-block-wrapper">
             <button class="copy-btn" onclick="copySnippet(this, 'cd backend\npython -m app.selfcheck')">Copy</button>
@@ -1552,17 +1968,53 @@ npm run dev</pre>
 python -m app.selfcheck</pre>
           </div>
 
-          <h4 style="color: #0f172a; font-size: 1.1rem; font-weight: 800; margin-top: 1.5rem; margin-bottom: 0.5rem;">4. Environment Variables (.env)</h4>
+          <h4 style="color: #0f172a; font-size: 1.1rem; font-weight: 800; margin-top: 1.5rem; margin-bottom: 0.5rem;">5. Measure Match Quality</h4>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem;">
+            Writes a review sheet of every discovery suggestion to hand-label, then reports accuracy
+            split by ranking vs recall failure:
+          </p>
           <div class="code-block-wrapper">
-            <pre class="code-block" style="color: #cbd5e1;">
-<span style="color:#64748b;"># Optional: Plug in any OpenAI-compatible endpoint</span>
+            <button class="copy-btn" onclick="copySnippet(this, 'cd backend\npython -m app.eval_discovery\n# label the verdict column (y/n), then:\npython -m app.eval_discovery --score')">Copy</button>
+            <pre class="code-block">cd backend
+python -m app.eval_discovery
+# label the verdict column (y/n), then:
+python -m app.eval_discovery --score</pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- Environment Variables -->
+      <h4 style="color: #0f172a; font-size: 1.1rem; font-weight: 800; margin-top: 2rem; margin-bottom: 0.75rem;">6. Environment Variables (.env)</h4>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.75rem;">
+        Full annotated template in <code>backend/.env.example</code>. Every surface is optional — an unset
+        surface is simply skipped.
+      </p>
+      <div class="code-block-wrapper">
+        <pre class="code-block" style="color: #cbd5e1;">
+<span style="color:#64748b;"># --- AI agent (optional; any OpenAI-compatible endpoint) ---</span>
 AI_API_KEY=your_key_here
 AI_BASE_URL=https://agentrouter.org/v1
 AI_MODEL=deepseek-v4-flash
-ALERT_WEBHOOK=https://your-webhook-endpoint.example/alerts
+
+<span style="color:#64748b;"># --- Discovery surfaces ---</span>
+DISCOVERY_DOCS_DIR=./compliance_docs
+DISCOVERY_S3_BUCKET=
+DISCOVERY_S3_PREFIX=
+# DISCOVERY_WEB_URL=https://trust.yourcompany.com
+
+<span style="color:#64748b;"># --- Scanned PDFs. !! DATA EGRESS: sends page images to the LLM endpoint above.</span>
+<span style="color:#64748b;"># --- Off unless explicitly enabled; everything else stays local.</span>
+DISCOVERY_VISION_OCR=false
+
+<span style="color:#64748b;"># --- GitHub surface: fills {owner}/{repo}/{branch} in descriptor endpoints ---</span>
+GITHUB_TOKEN=
+GITHUB_OWNER=
+GITHUB_REPO=
+GITHUB_BRANCH=main
+
+<span style="color:#64748b;"># --- Failure alerts (Slack-compatible) ---</span>
+ALERT_WEBHOOK=
 </pre>
-          </div>
-        </div>
       </div>
     </section>
 

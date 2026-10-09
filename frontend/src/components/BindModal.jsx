@@ -98,8 +98,8 @@ export default function BindModal({ control, collectors, onClose, onSaved, toast
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
-          <div className="space-y-1.5">
+        <div className="space-y-4 min-w-0 w-full">
+          <div className="space-y-1.5 min-w-0">
             <div className="flex items-center justify-between gap-3">
               <Label htmlFor="collector">Collector</Label>
               <button
@@ -124,7 +124,7 @@ export default function BindModal({ control, collectors, onClose, onSaved, toast
             </Select>
           </div>
 
-          <div className="space-y-1.5">
+          <div className="space-y-1.5 min-w-0">
             <div className="flex items-center justify-between gap-3">
               <Label htmlFor="config">
                 Configuration <span className="font-normal text-muted-foreground">what to collect</span>
@@ -147,7 +147,7 @@ export default function BindModal({ control, collectors, onClose, onSaved, toast
               rows={6}
               aria-invalid={configError ? true : undefined}
               aria-describedby={configError ? "config-error" : undefined}
-              className="font-mono text-xs"
+              className="font-mono text-xs w-full max-w-full break-all resize-y"
             />
             {configError && (
               <p id="config-error" className="text-xs text-status-failed">

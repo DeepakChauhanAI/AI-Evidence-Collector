@@ -6,3 +6,6 @@ apscheduler
 python-multipart
 requests
 playwright
+boto3
+pypdfium2
+pillow

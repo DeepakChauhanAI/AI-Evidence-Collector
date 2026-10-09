@@ -28,6 +28,7 @@ import PageHeader from "@/components/page-header.jsx";
 import BindModal from "./components/BindModal.jsx";
 import Dashboard from "./views/Dashboard.jsx";
 import Controls from "./views/Controls.jsx";
+import Discovery from "./views/Discovery.jsx";
 import Evidence from "./views/Evidence.jsx";
 import Activity from "./views/Activity.jsx";
 import Sources from "./views/Sources.jsx";
@@ -35,6 +36,7 @@ import Sources from "./views/Sources.jsx";
 const HEADS = {
   dashboard: ["Audit Readiness", "Where you stand against the SOC 2 checklist, at a glance."],
   controls: ["Evidence Checklist", "Map an automated collector to each control. Collectors pull evidence on schedule."],
+  discovery: ["Evidence Discovery", "The engine proposes evidence for each control by scanning your surfaces. You confirm what gets collected."],
   evidence: ["Evidence Library", "Every artifact collected — searchable, hashed, and traceable to its control."],
   activity: ["Collection Activity", "Every run and the evidence it produced, newest first."],
   sources: ["Collector Sources", "The shared workers that gather evidence — a few, each serving many controls."],
@@ -81,7 +83,11 @@ export default function App() {
   const [collectors, setCollectors] = useState([]);
   const [runs, setRuns] = useState([]);
   const [binding, setBinding] = useState(null);
-  const [selected, setSelected] = useState(null); // control open in the drill-down sheet
+  // The drill-down sheet tracks the control by id and reads it back from the fresh
+  // list. Holding the object itself meant that binding or running from inside the
+  // sheet left it showing the pre-refresh state ("No collector mapped yet" right
+  // after a collector was mapped).
+  const [selectedId, setSelectedId] = useState(null);
   const [evidenceCount, setEvidenceCount] = useState(null);
   // Sidebar collapse is a workspace preference, not per-visit — persist it so it
   // survives a reload instead of snapping back open.
@@ -152,19 +158,20 @@ export default function App() {
       : `✓ All ${ok} evidence files intact.`);
   };
 
-  const openControl = (c) => { setSelected(c); setView("controls"); };
+  const openControl = (c) => { setSelectedId(c.id); setView("controls"); };
 
   if (!authed) return <Gate onSave={saveToken} />;
 
   const ready = readiness(controls, runs);
+  const selected = controls.find((c) => c.id === selectedId) || null;
   const tally = { satisfied: 0, gap: 0, collected: 0, stale: 0, pending: 0, failed: 0, uncovered: 0 };
   for (const c of controls) tally[(ready[c.id] || { status: "uncovered" }).status]++;
   const staleIds = controls
     .filter((c) => ["stale", "failed"].includes((ready[c.id] || {}).status))
     .flatMap((c) => c.bindings.map((b) => b.id));
 
-  const counts = { dashboard: null, controls: controls.length, evidence: evidenceCount,
-                   activity: runs.length, sources: collectors.length };
+  const counts = { dashboard: null, controls: controls.length, discovery: null,
+                   evidence: evidenceCount, activity: runs.length, sources: collectors.length };
 
   const [title, description] = HEADS[view];
 
@@ -245,7 +252,8 @@ export default function App() {
             {view === "controls" && (
               controls.length ? (
                 <Controls controls={controls} runs={runs} ready={ready} collectors={collectors}
-                          onRun={run} onBind={setBinding} selected={selected} onSelect={setSelected} />
+                          onRun={run} onBind={setBinding} onBound={refresh} selected={selected}
+                          onSelect={(c) => setSelectedId(c ? c.id : null)} />
               ) : (
                 <div className="grid place-items-center rounded-xl border border-dashed border-input bg-card px-6 py-14 text-center">
                   <div className="max-w-md">
@@ -259,6 +267,7 @@ export default function App() {
                 </div>
               )
             )}
+            {view === "discovery" && <Discovery controls={controls} onBound={refresh} />}
             {view === "evidence" && <Evidence />}
             {view === "activity" && <Activity runs={runs} />}
             {view === "sources" && <Sources collectors={collectors} controls={controls} />}

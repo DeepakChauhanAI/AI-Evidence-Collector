@@ -1,0 +1,45 @@
+control_code,control_name,rank,score,tier,collector,source_name,reason,verdict
+A1.1,Capacity monitoring,1,0.833,direct,aws,AWS CloudWatch alarm configuration,"logging, availability, performance",y
+A1.1,Capacity monitoring,2,0.667,direct,aws,AWS Route 53 health checks,"logging, availability",n
+A1.1,Capacity monitoring,3,0.5,direct,aws,AWS Auto Scaling group configuration,"availability, performance",y
+A1.2,Availability / disaster recovery,1,0.667,direct,aws,AWS RDS instance configuration,"backup, availability",y
+A1.2,Availability / disaster recovery,2,0.667,direct,aws,AWS Elastic Load Balancer configuration,"backup, availability",y
+A1.2,Availability / disaster recovery,3,0.667,direct,aws,AWS Route 53 health checks,"backup, availability",y
+C1.1,Data classification,1,0.5,documentary,local_file,Encryption_Standard.md,"policy, data",n
+C1.1,Data classification,2,0.5,direct,aws,AWS KMS key inventory,"classification, data",n
+C1.1,Data classification,3,0.5,direct,aws,AWS S3 bucket inventory,"classification, data",n
+CC2.1,Security policies published,1,0.5,documentary,local_file,Vendor_Risk_Management_SOP.md,"policy, security",y
+CC2.2,Security awareness training,1,0.333,documentary,local_file,Vendor_Risk_Management_SOP.md,"annual, security",n
+CC5.2,Access control policy,1,0.833,documentary,local_file,Access_Control_Policy_2026.md,"access, policy, provisioning",y
+CC5.2,Access control policy,2,0.833,direct,aws,AWS IAM account password policy,"access, policy, logical",y
+CC5.2,Access control policy,3,0.667,direct,aws,AWS IAM account summary,"access, policy",y
+CC5.2,Access control policy,4,0.5,documentary,local_file,Vendor_Risk_Management_SOP.md,"policy, review",n
+CC5.2,Access control policy,5,0.5,direct,github,GitHub branch protection rules,"access, review",n
+CC6.1,Logical access provisioning,1,0.667,documentary,local_file,Access_Control_Policy_2026.md,"access, provisioning, user",y
+CC6.1,Logical access provisioning,2,0.5,direct,aws,AWS IAM account password policy,"access, logical",y
+CC6.1,Logical access provisioning,3,0.5,direct,aws,AWS IAM users and MFA enrolment,"access, user",y
+CC6.2,Access deprovisioning on termination,1,0.667,documentary,local_file,Access_Control_Policy_2026.md,"access, deprovisioning, users",y
+CC6.2,Access deprovisioning on termination,2,0.667,direct,aws,AWS IAM users and MFA enrolment,"access, deprovisioning, users",y
+CC6.3,Periodic access reviews,1,0.667,direct,github,GitHub branch protection rules,"access, sign, review",n
+CC6.3,Periodic access reviews,2,0.5,documentary,local_file,Access_Control_Policy_2026.md,"access, user",n
+CC6.3,Periodic access reviews,3,0.5,direct,aws,AWS IAM users and MFA enrolment,"access, user",y
+CC6.6,Multi-factor authentication,1,1.0,direct,aws,AWS IAM users and MFA enrolment,"access, mfa, multi, factor",y
+CC6.6,Multi-factor authentication,2,0.833,direct,github,GitHub organization two-factor requirement,"access, mfa, factor",y
+CC6.6,Multi-factor authentication,3,0.667,documentary,local_file,Access_Control_Policy_2026.md,"access, mfa",y
+CC6.7,Encryption in transit,1,0.667,documentary,local_file,Encryption_Standard.md,"encryption, transit, data",y
+CC6.7,Encryption in transit,2,0.5,direct,aws,AWS KMS key inventory,"encryption, data",n
+CC6.8,Encryption at rest,1,0.667,documentary,local_file,Encryption_Standard.md,"encryption, rest, data",y
+CC6.8,Encryption at rest,2,0.667,direct,aws,AWS KMS key inventory,"encryption, rest, data",y
+CC7.1,Vulnerability scanning,1,0.333,direct,github,GitHub secret scanning alerts,vulnerability,y
+CC7.1,Vulnerability scanning,2,0.333,direct,github,GitHub Dependabot alerts,vulnerability,y
+CC7.2,Security monitoring and alerting,1,0.5,direct,aws,AWS CloudTrail trail configuration,"logging, configuration",y
+CC7.2,Security monitoring and alerting,2,0.5,direct,aws,AWS GuardDuty detectors,"logging, security",y
+CC7.2,Security monitoring and alerting,3,0.5,direct,aws,AWS Config rule evaluations,"logging, configuration",y
+CC7.2,Security monitoring and alerting,4,0.5,direct,aws,AWS CloudWatch alarm configuration,"logging, configuration",y
+CC7.3,Incident response,1,0.5,documentary,local_file,Incident_Response_Plan_v2.md,"incident, plan",y
+CC7.5,Backup and recovery,1,0.5,direct,aws,AWS RDS instance configuration,"backup, configuration",y
+CC7.5,Backup and recovery,2,0.5,direct,aws,AWS Elastic Load Balancer configuration,"backup, configuration",n
+CC8.1,Change management,1,0.667,direct,github,GitHub Actions workflow inventory,"change, testing, management",y
+CC8.1,Change management,2,0.5,direct,github,GitHub branch protection rules,"change, management",y
+CC9.2,Vendor risk management,1,1.0,documentary,local_file,Vendor_Risk_Management_SOP.md,"vendor, risk, management, third",y
+CC9.2,Vendor risk management,2,0.833,direct,github,GitHub Dependabot alerts,"vendor, risk, third",y

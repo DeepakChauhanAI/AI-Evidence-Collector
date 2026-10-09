@@ -1,11 +1,15 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 import {
   CaretRight,
   Warning,
   Plus,
   Play,
-  ArrowSquareOut,
+  Eye,
+  DownloadSimple,
+  Sparkle,
 } from "@phosphor-icons/react";
+import EvidencePreviewModal from "@/components/EvidencePreviewModal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
@@ -23,8 +27,8 @@ import {
   SheetDescription,
 } from "@/components/ui/sheet";
 import StatusBadge from "@/components/status-badge";
-import { STALE_DAYS, groupControls, matchFilter } from "@/lib/readiness";
-import { downloadUrl } from "@/lib/api";
+import { STALE_DAYS, groupControls, matchFilter, matchStrength } from "@/lib/readiness";
+import { api, downloadUrl } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
 const FILTERS = [
@@ -32,10 +36,41 @@ const FILTERS = [
 ];
 const READY = ["satisfied", "collected"];
 
-export default function Controls({ controls, runs, ready, collectors, onRun, onBind, selected, onSelect }) {
+export default function Controls({ controls, runs, ready, collectors, onRun, onBind, onBound, selected, onSelect }) {
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState("all");
   const [open, setOpen] = useState(() => new Set());
+  // Discovery suggestions, fetched here so the checklist itself shows what the
+  // engine already found — the auditor shouldn't have to visit another view to
+  // learn a control has evidence waiting.
+  const [suggestions, setSuggestions] = useState([]);
+
+  const loadSuggestions = () =>
+    api("/discovery/candidates").catch(() => []).then((r) => setSuggestions(Array.isArray(r) ? r : []));
+
+  useEffect(() => { loadSuggestions(); }, []);
+
+  const byControl = useMemo(() => {
+    const m = new Map();
+    for (const s of suggestions) {
+      if (!m.has(s.control_id)) m.set(s.control_id, []);
+      m.get(s.control_id).push(s);
+    }
+    return m;
+  }, [suggestions]);
+
+  // Confirming a suggestion creates an ordinary binding — same path as manual entry.
+  const bindSuggestion = async (s) => {
+    const r = await api("/discovery/bind", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ candidate_id: s.id }),
+    }).catch(() => null);
+    if (!r?.binding_id) { toast.error("Couldn't bind that suggestion."); return; }
+    toast.success(`Mapped ${s.source_name} to ${s.control_code}.`);
+    await loadSuggestions();
+    onBound?.();
+  };
 
   const visible = controls.filter((c) => matchFilter(c, ready[c.id], q, filter));
   const groups = groupControls(visible);
@@ -179,10 +214,17 @@ export default function Controls({ controls, runs, ready, collectors, onRun, onB
                                   </span>
                                 ))}
                                 {!c.bindings.length && (
-                                  <span className="text-xs text-muted-foreground">
-                                    suggested{" "}
-                                    <span className="font-mono text-foreground">{c.suggested_collector}</span>
-                                  </span>
+                                  byControl.has(c.id) ? (
+                                    <Button variant="outline" size="sm" onClick={() => onSelect(c)}>
+                                      <Sparkle size={14} />
+                                      {byControl.get(c.id).length} suggested
+                                    </Button>
+                                  ) : (
+                                    <span className="text-xs text-muted-foreground">
+                                      suggested{" "}
+                                      <span className="font-mono text-foreground">{c.suggested_collector}</span>
+                                    </span>
+                                  )
                                 )}
                                 <Button variant="outline" size="sm" onClick={() => onBind(c)}>
                                   <Plus size={14} />
@@ -207,6 +249,8 @@ export default function Controls({ controls, runs, ready, collectors, onRun, onB
           control={selected}
           runs={runs}
           ready={ready[selected.id] || { status: "uncovered" }}
+          suggestions={byControl.get(selected.id) || []}
+          onBindSuggestion={bindSuggestion}
           onClose={() => onSelect(null)}
           onRun={onRun}
           onBind={onBind}
@@ -217,13 +261,15 @@ export default function Controls({ controls, runs, ready, collectors, onRun, onB
 }
 
 /* ---------- drill-down slide-over ---------- */
-function ControlSheet({ control, runs, ready, onClose, onRun, onBind }) {
+function ControlSheet({ control, runs, ready, suggestions, onBindSuggestion, onClose, onRun, onBind }) {
+  const [previewEvidence, setPreviewEvidence] = useState(null);
   const bindingIds = new Set(control.bindings.map((b) => b.id));
   const history = runs.filter((r) => bindingIds.has(r.binding_id));
   const latest = history[0];
 
   return (
-    <Sheet open onOpenChange={(o) => !o && onClose()}>
+    <>
+      <Sheet open onOpenChange={(o) => !o && onClose()}>
       <SheetContent className="w-full gap-0 overflow-y-auto sm:max-w-xl">
         <SheetHeader className="border-b border-border">
           <span className="font-mono text-xs text-muted-foreground">{control.code}</span>
@@ -314,6 +360,48 @@ function ControlSheet({ control, runs, ready, onClose, onRun, onBind }) {
             </Button>
           </section>
 
+          {suggestions.length > 0 && (
+            <section>
+              <h3 className="mb-2 text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                Suggested evidence ({suggestions.length})
+              </h3>
+              <ul className="space-y-2">
+                {suggestions.map((s) => (
+                  <li key={s.id} className="rounded-lg border border-border p-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="truncate font-mono text-sm" title={s.source_name}>
+                          {s.source_name}
+                        </div>
+                        {/* The reason names the matched signals, so the suggestion can be
+                            checked rather than taken on faith. */}
+                        <div className="mt-0.5 text-xs text-pretty text-muted-foreground">
+                          {s.reason}
+                        </div>
+                        <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                          <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium">
+                            {matchStrength(s.score)}
+                          </span>
+                          <span className="rounded bg-muted px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground">
+                            {s.surface}
+                          </span>
+                          {s.signals?.age_days != null && (
+                            <span className="text-[11px] text-muted-foreground">
+                              {s.signals.age_days}d old
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <Button variant="outline" size="sm" onClick={() => onBindSuggestion(s)}>
+                        Bind
+                      </Button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
           <section>
             <h3 className="mb-2 text-xs font-medium tracking-wide text-muted-foreground uppercase">
               Run history ({history.length})
@@ -335,19 +423,42 @@ function ControlSheet({ control, runs, ready, onClose, onRun, onBind }) {
                     {r.evidence.length > 0 && (
                       <ul className="mt-2 space-y-1 border-t border-dashed border-border pt-2">
                         {r.evidence.map((e) => (
-                          <li key={e.id}>
-                            <a
-                              href={downloadUrl(e.id)}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="flex items-center gap-2 rounded px-1 py-1 text-sm transition-colors hover:bg-muted/50"
+                          <li
+                            key={e.id}
+                            className="flex items-center justify-between gap-2 rounded px-1.5 py-1 text-sm transition-colors hover:bg-muted/50 group"
+                          >
+                            <button
+                              type="button"
+                              onClick={() => setPreviewEvidence(e)}
+                              className="flex items-center gap-2 min-w-0 flex-1 text-left transition-colors hover:text-primary font-medium"
                             >
-                              <span className="min-w-0 flex-1 truncate">{e.filename}</span>
+                              <span className="min-w-0 truncate">{e.filename}</span>
                               <span className="font-mono text-xs text-muted-foreground">
                                 {e.sha256.slice(0, 16)}…
                               </span>
-                              <ArrowSquareOut size={13} className="shrink-0 text-muted-foreground" aria-hidden />
-                            </a>
+                            </button>
+                            <div className="flex items-center gap-1 shrink-0">
+                              <button
+                                type="button"
+                                onClick={() => setPreviewEvidence(e)}
+                                className="p-1 rounded text-muted-foreground hover:text-primary transition-colors"
+                                title={`Preview ${e.filename}`}
+                                aria-label={`Preview ${e.filename}`}
+                              >
+                                <Eye size={13} />
+                              </button>
+                              <a
+                                href={downloadUrl(e.id)}
+                                target="_blank"
+                                rel="noreferrer"
+                                download={e.filename}
+                                className="p-1 rounded text-muted-foreground hover:text-foreground transition-colors"
+                                title={`Download ${e.filename}`}
+                                aria-label={`Download ${e.filename}`}
+                              >
+                                <DownloadSimple size={13} />
+                              </a>
+                            </div>
                           </li>
                         ))}
                       </ul>
@@ -362,5 +473,13 @@ function ControlSheet({ control, runs, ready, onClose, onRun, onBind }) {
         </div>
       </SheetContent>
     </Sheet>
+
+    {previewEvidence && (
+      <EvidencePreviewModal
+        evidence={previewEvidence}
+        onClose={() => setPreviewEvidence(null)}
+      />
+    )}
+  </>
   );
 }

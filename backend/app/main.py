@@ -14,7 +14,7 @@ from .checklist import import_csv, suggest_collector, _keyword_suggest
 from .runner import run_binding
 from .collectors import REGISTRY
 from .soc2_starter import seed_controls
-from . import agent
+from . import agent, discovery
 from .export import build_export
 
 
@@ -46,6 +46,15 @@ class BindingIn(BaseModel):
     collector_type: str
     config: dict = {}
     schedule_minutes: int = 0
+
+
+class ScanIn(BaseModel):
+    local_path: str = None       # override DISCOVERY_DOCS_DIR for this scan
+
+
+class BindCandidateIn(BaseModel):
+    candidate_id: int
+    schedule_minutes: int = 0    # 0 = manual only; binding does NOT auto-run
 
 
 # ---- checklist / controls ----
@@ -101,6 +110,77 @@ def suggest_collector_ai(control_id: int, db: Session = Depends(get_db)):
     return {"collector_type": suggest_collector(c)}
 
 
+# ---- discovery ----
+@app.get("/api/discovery/sources")
+def discovery_sources():
+    """Configured discovery surfaces and their status. A surface is 'active' when it
+    will collect real evidence, 'samples' when it is scanned but the collectors will
+    emit labeled samples (no credentials), 'planned' when not built yet."""
+    root = os.path.abspath(os.getenv("DISCOVERY_DOCS_DIR", discovery.DEFAULT_ROOT))
+    docs = discovery.discover(root)
+    creds = discovery.catalog.credentials_present()
+    n = lambda surface: sum(1 for d in discovery.catalog.DESCRIPTORS if d["surface"] == surface)
+    web_url = os.getenv("DISCOVERY_WEB_URL", "").strip()
+    bucket = os.getenv("DISCOVERY_S3_BUCKET", "").strip()
+    # Documents is the local folder plus, when configured, an S3 bucket. The bucket is
+    # not listed here — that is a network call, and a page load must not make one.
+    doc_targets = [root if os.path.isdir(root) else f"{root} (not found)"]
+    if bucket:
+        doc_targets.append(f"s3://{bucket}/")
+    return {"surfaces": [
+        {"surface": "documents", "state": "active" if os.path.isdir(root) or bucket else "idle",
+         "root": root, "documents": len(docs), "detail": "  +  ".join(doc_targets)},
+        {"surface": "cloud", "state": "active" if creds["cloud"] else "samples",
+         "descriptors": n("cloud"),
+         "detail": "AWS read-only configuration APIs" + ("" if creds["cloud"] else " — no credentials")},
+        {"surface": "code", "state": "active" if creds["code"] else "samples",
+         "descriptors": n("code"),
+         "detail": "GitHub org & repo settings" + ("" if creds["code"] else " — needs GITHUB_TOKEN + GITHUB_OWNER/REPO")},
+        # Not crawled here — a page load must not fire N requests at the target site.
+        # The page count appears after a scan, in the scan summary.
+        {"surface": "web", "state": "active" if web_url else "planned",
+         "detail": web_url or "set DISCOVERY_WEB_URL (trust center / wiki base)"},
+    ]}
+
+
+@app.post("/api/discovery/scan")
+def discovery_scan(body: ScanIn = None, db: Session = Depends(get_db)):
+    """Scan configured surfaces, refresh suggested candidates. Does not bind or collect."""
+    return discovery.run_scan(db, root=(body.local_path if body else None))
+
+
+@app.get("/api/discovery/candidates")
+def discovery_candidates(status: str = "new", db: Session = Depends(get_db)):
+    """Suggested candidates, best first, joined to their control."""
+    q = (db.query(models.DiscoveryCandidate, models.Control)
+         .join(models.Control, models.DiscoveryCandidate.control_id == models.Control.id))
+    if status:
+        q = q.filter(models.DiscoveryCandidate.status == status)
+    rows = q.order_by(models.DiscoveryCandidate.score.desc()).all()
+    return [{"id": c.id, "control_id": c.control_id, "control_code": ctrl.code,
+             "control_name": ctrl.name, "surface": c.surface, "source_name": c.source_name,
+             "collector_type": c.collector_type, "config": c.config, "score": c.score,
+             "reason": c.reason, "signals": c.signals, "status": c.status} for c, ctrl in rows]
+
+
+@app.post("/api/discovery/bind")
+def discovery_bind(body: BindCandidateIn, db: Session = Depends(get_db)):
+    """Confirm a candidate: create an ordinary Binding from it. Never auto-runs —
+    collection stays an explicit auditor action (DISCOVERY_PLAN.md §6)."""
+    c = db.get(models.DiscoveryCandidate, body.candidate_id)
+    if not c:
+        raise HTTPException(404, "candidate not found")
+    if c.status != "new":
+        raise HTTPException(400, f"candidate already {c.status}")
+    b = models.Binding(control_id=c.control_id, collector_type=c.collector_type,
+                       config=c.config, schedule_minutes=body.schedule_minutes)
+    db.add(b)
+    c.status = "bound"
+    db.commit()
+    scheduler.reload()
+    return {"binding_id": b.id, "control_id": c.control_id, "collector_type": c.collector_type}
+
+
 # ---- bindings ----
 @app.post("/api/bindings")
 def create_binding(body: BindingIn, db: Session = Depends(get_db)):
@@ -148,12 +228,60 @@ def list_evidence(db: Session = Depends(get_db)):
              "sample": bool((e.meta or {}).get("sample"))} for e, r, c in rows]
 
 
+@app.get("/api/evidence/{evidence_id}")
+def get_evidence(evidence_id: int, db: Session = Depends(get_db)):
+    row = (db.query(models.Evidence, models.Run, models.Control)
+           .join(models.Run, models.Evidence.run_id == models.Run.id)
+           .join(models.Binding, models.Run.binding_id == models.Binding.id)
+           .join(models.Control, models.Binding.control_id == models.Control.id)
+           .filter(models.Evidence.id == evidence_id).first())
+    if not row:
+        raise HTTPException(404, "not found")
+    e, r, c = row
+    size_bytes = os.path.getsize(e.path) if os.path.exists(e.path) else 0
+    return {
+        "id": e.id,
+        "filename": e.filename,
+        "sha256": e.sha256,
+        "control_code": c.code,
+        "control_name": c.name,
+        "run_id": r.id,
+        "collected_at": e.collected_at.isoformat(),
+        "sample": bool((e.meta or {}).get("sample")),
+        "meta": e.meta or {},
+        "size_bytes": size_bytes,
+    }
+
+
 @app.get("/api/evidence/{evidence_id}/download")
-def download_evidence(evidence_id: int, db: Session = Depends(get_db)):
+def download_evidence(evidence_id: int, inline: bool = False, db: Session = Depends(get_db)):
     e = db.get(models.Evidence, evidence_id)
     if not e:
         raise HTTPException(404, "not found")
-    return FileResponse(e.path, filename=e.filename)
+    if not os.path.exists(e.path):
+        raise HTTPException(404, "evidence file missing on disk")
+    import mimetypes
+    media_type, _ = mimetypes.guess_type(e.filename)
+    if not media_type:
+        if e.filename.endswith(".json"):
+            media_type = "application/json"
+        elif e.filename.endswith(".txt") or e.filename.endswith(".log"):
+            media_type = "text/plain"
+        elif e.filename.endswith(".pdf"):
+            media_type = "application/pdf"
+        elif e.filename.endswith(".csv"):
+            media_type = "text/csv"
+    return FileResponse(
+        e.path,
+        media_type=media_type or "application/octet-stream",
+        filename=e.filename,
+        content_disposition_type="inline" if inline else "attachment",
+    )
+
+
+@app.get("/api/evidence/{evidence_id}/preview")
+def preview_evidence(evidence_id: int, db: Session = Depends(get_db)):
+    return download_evidence(evidence_id=evidence_id, inline=True, db=db)
 
 
 @app.get("/api/integrity")

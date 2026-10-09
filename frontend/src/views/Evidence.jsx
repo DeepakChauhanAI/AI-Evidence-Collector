@@ -5,7 +5,8 @@ import {
   CaretDown,
   Copy,
   Check,
-  ArrowSquareOut,
+  Eye,
+  DownloadSimple,
 } from "@phosphor-icons/react";
 import { api, downloadUrl } from "@/lib/api";
 import { ageDays, ageLabel } from "@/lib/readiness";
@@ -20,17 +21,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
-
-const IMG = /\.(png|jpe?g|gif|webp|svg)$/i;
-const TEXT = /\.(json|txt|csv|log|ya?ml|xml|md|html?)$/i;
+import EvidencePreviewModal from "@/components/EvidencePreviewModal";
 
 // Integrity states reuse the status tokens so the vocabulary matches everywhere else.
 const INTEGRITY = {
@@ -209,16 +200,28 @@ export default function Evidence() {
                     )}
                   </TableCell>
                   <TableCell>
-                    <a
-                      href={downloadUrl(e.id)}
-                      target="_blank"
-                      rel="noreferrer"
-                      aria-label={`Download ${e.filename}`}
-                      className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
-                    >
-                      Download
-                      <ArrowSquareOut size={12} aria-hidden />
-                    </a>
+                    <div className="flex items-center justify-end gap-1">
+                      <button
+                        type="button"
+                        onClick={() => setPreview(e)}
+                        className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                        title={`Preview ${e.filename}`}
+                        aria-label={`Preview ${e.filename}`}
+                      >
+                        <Eye size={15} aria-hidden />
+                      </button>
+                      <a
+                        href={downloadUrl(e.id)}
+                        target="_blank"
+                        rel="noreferrer"
+                        download={e.filename}
+                        aria-label={`Download ${e.filename}`}
+                        className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                        title={`Download ${e.filename}`}
+                      >
+                        <DownloadSimple size={15} aria-hidden />
+                      </a>
+                    </div>
                   </TableCell>
                 </TableRow>
               );
@@ -232,54 +235,12 @@ export default function Evidence() {
         )}
       </div>
 
-      {preview && <PreviewModal item={preview} onClose={() => setPreview(null)} />}
+      {preview && (
+        <EvidencePreviewModal
+          evidence={preview}
+          onClose={() => setPreview(null)}
+        />
+      )}
     </>
-  );
-}
-
-/* ---------- inline preview ---------- */
-function PreviewModal({ item, onClose }) {
-  const [text, setText] = useState(null); // null=loading, false=not previewable, string=content
-  const url = downloadUrl(item.id);
-  const isImg = IMG.test(item.filename);
-
-  useEffect(() => {
-    if (isImg) { setText(false); return; }
-    if (!TEXT.test(item.filename)) { setText(false); return; }
-    let alive = true;
-    fetch(url).then((r) => r.text()).then((t) => { if (alive) setText(t); }).catch(() => alive && setText(""));
-    return () => { alive = false; };
-  }, [item.id]);
-
-  return (
-    <Dialog open onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="sm:max-w-3xl">
-        <DialogHeader>
-          <DialogTitle className="truncate">{item.filename}</DialogTitle>
-          <DialogDescription className="font-mono">{item.control_code}</DialogDescription>
-        </DialogHeader>
-
-        <div className="max-h-[65vh] overflow-auto rounded-lg border border-border bg-muted/30 p-3">
-          {isImg ? (
-            <img className="mx-auto block h-auto max-w-full rounded" src={url} alt={item.filename} />
-          ) : text === null ? (
-            <Skeleton className="h-40 w-full" />
-          ) : text === false ? (
-            <p className="py-8 text-center text-sm text-muted-foreground">
-              No inline preview for this file type — download to view.
-            </p>
-          ) : (
-            <pre className="font-mono text-xs leading-relaxed break-words whitespace-pre-wrap">{text}</pre>
-          )}
-        </div>
-
-        <DialogFooter>
-          <Button variant="outline" asChild>
-            <a href={url} target="_blank" rel="noreferrer">Download</a>
-          </Button>
-          <Button onClick={onClose}>Close</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
   );
 }
